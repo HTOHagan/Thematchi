@@ -58,7 +58,7 @@
     .market{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
     @media(max-width:540px){.market{grid-template-columns:1fr}}
     .side{border:1px solid var(--line);border-radius:16px;background:rgba(15,23,48,.6);padding:14px}
-    .name{font-weight:950;font-size:14px;margin:0 0 6px}
+    .{font-weight:950;font-size:14px;margin:0 0 6px}
     .price{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
     .big{font-size:34px;font-weight:980;letter-spacing:-.5px}
     .small{font-size:12px;color:var(--muted)}
@@ -86,18 +86,18 @@
   <!-- AUTH -->
   <section class="card" id="authCard">
     <div class="hd">
-      <div class="pill"><strong>Step 1:</strong> Name + PIN</div>
+      <div class="pill"><strong>Step 1:</strong>  + PIN</div>
       <div class="pill" id="authPill"><strong>Status:</strong> not logged in</div>
     </div>
     <div class="bd">
       <div class="row">
         <div>
           <label>Your name</label>
-          <input id="name" type="text" placeholder="Tom" autocomplete="name"/>
+          <input id="name" type="text" placeholder="Enter Name here " autocomplete="name"/>
         </div>
         <div>
           <label>Your PIN (4+ chars)</label>
-          <input id="pin" type="password" placeholder="1234" autocomplete="current-password"/>
+          <input id="pin" type="password" placeholder="Enter Pin" autocomplete="current-password"/>
         </div>
       </div>
       <div class="row" style="margin-top:12px">
