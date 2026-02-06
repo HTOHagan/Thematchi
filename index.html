@@ -33,17 +33,31 @@
       overflow:hidden;
       margin-top:14px;
     }
-    .hd{padding:14px 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02);
-      display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
-    .pill{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;
-      padding:7px 10px;background:rgba(27,39,80,.55)}
+    .hd{
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.02);
+      display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap
+    }
+    .pill{
+      font-size:12px;color:var(--muted);
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:7px 10px;
+      background:rgba(27,39,80,.55)
+    }
     .pill strong{color:var(--text)}
     .bd{padding:16px}
     label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
     input,button{font:inherit}
     input[type="text"], input[type="number"], input[type="password"]{
-      width:100%;padding:12px 12px;border-radius:12px;border:1px solid var(--line);
-      background: rgba(10,16,40,.55);color:var(--text);outline:none;
+      width:100%;
+      padding:12px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background: rgba(10,16,40,.55);
+      color:var(--text);
+      outline:none;
     }
     .row{display:flex;gap:10px;flex-wrap:wrap}
     .row>*{flex:1;min-width:200px}
@@ -51,10 +65,32 @@
       border:1px solid var(--line);
       background: linear-gradient(180deg, rgba(42,60,122,.95), rgba(34,52,107,.95));
       color:var(--text);
-      padding:12px 12px;border-radius:12px;cursor:pointer;font-weight:900;flex:1;min-width:150px;
+      padding:12px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:900;
+      flex:1;
+      min-width:150px;
     }
     button.secondary{background:rgba(18,26,51,.55)}
     button:disabled{opacity:.5;cursor:not-allowed}
+
+    /* Big “radio buttons” (segmented buttons) */
+    .seg{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:4px;
+    }
+    .segBtn{
+      flex:1;
+      min-width:240px;
+      padding:18px 14px;      /* bigger */
+      border-radius:16px;
+      font-weight:950;
+      font-size:16px;
+    }
+
     .market{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
     @media(max-width:540px){.market{grid-template-columns:1fr}}
     .side{border:1px solid var(--line);border-radius:16px;background:rgba(15,23,48,.6);padding:14px}
@@ -83,29 +119,22 @@
   <!-- AUTH -->
   <section class="card" id="authCard">
     <div class="hd">
-      <div class="pill"><strong>Step 1:</strong> Choose new or returning</div>
+      <div class="pill"><strong>Step 1:</strong> Sign in</div>
       <div class="pill" id="authPill"><strong>Status:</strong> not logged in</div>
     </div>
 
     <div class="bd">
-      <!-- Mode selector (radio buttons) -->
       <div class="row" style="align-items:center">
-        <div style="flex:2; min-width:260px">
-          <label style="margin-bottom:10px">I am a:</label>
-          <div style="display:flex; gap:14px; flex-wrap:wrap">
-            <label style="display:flex; align-items:center; gap:10px; cursor:pointer">
-              <input type="radio" name="authMode" value="new" checked onchange="setAuthMode(this.value)">
-              <span style="font-weight:900">New user</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:10px; cursor:pointer">
-              <input type="radio" name="authMode" value="returning" onchange="setAuthMode(this.value)">
-              <span style="font-weight:900">Returning user</span>
-            </label>
+        <div style="flex:2; min-width:280px">
+          <label style="margin-bottom:10px">Choose:</label>
+          <div class="seg">
+            <button id="modeNewBtn" class="segBtn" type="button" onclick="setAuthMode('new')">New user</button>
+            <button id="modeReturningBtn" class="segBtn secondary" type="button" onclick="setAuthMode('returning')">Returning user</button>
           </div>
         </div>
 
         <div style="flex:1; min-width:220px; text-align:right">
-          <button class="secondary" onclick="clearSaved()">Clear saved login</button>
+          <button class="secondary" type="button" onclick="clearSaved()">Clear saved login</button>
         </div>
       </div>
 
@@ -122,7 +151,7 @@
           </div>
         </div>
         <div class="row" style="margin-top:12px">
-          <button onclick="registerNewUser()">Create account</button>
+          <button type="button" onclick="registerNewUser()">Create account</button>
         </div>
       </div>
 
@@ -139,10 +168,9 @@
           </div>
         </div>
         <div class="row" style="margin-top:12px">
-          <button onclick="loginReturningUser()">Login</button>
+          <button type="button" onclick="loginReturningUser()">Login</button>
         </div>
       </div>
-
     </div>
   </section>
 
@@ -157,7 +185,7 @@
     <div class="bd">
       <div class="row">
         <div class="pill"><strong>Remaining:</strong> <span id="remaining">—</span> / <span id="maxPts">—</span> pts</div>
-        <button class="secondary" onclick="logout()">Log out</button>
+        <button class="secondary" type="button" onclick="logout()">Log out</button>
       </div>
 
       <div class="row" style="margin-top:12px">
@@ -165,11 +193,11 @@
           <label>Bet points</label>
           <input id="points" type="number" min="1" value="10" />
           <div class="preset">
-            <button class="secondary" onclick="setPts(5)">5</button>
-            <button class="secondary" onclick="setPts(10)">10</button>
-            <button class="secondary" onclick="setPts(20)">20</button>
-            <button class="secondary" onclick="setPts(50)">50</button>
-            <button class="secondary" onclick="setPts(100)">100</button>
+            <button class="secondary" type="button" onclick="setPts(5)">5</button>
+            <button class="secondary" type="button" onclick="setPts(10)">10</button>
+            <button class="secondary" type="button" onclick="setPts(20)">20</button>
+            <button class="secondary" type="button" onclick="setPts(50)">50</button>
+            <button class="secondary" type="button" onclick="setPts(100)">100</button>
           </div>
         </div>
       </div>
@@ -183,7 +211,7 @@
           </div>
           <div class="small" id="ptsA">—</div>
           <div class="row" style="margin-top:12px">
-            <button id="betA" onclick="bet('A')">Bet on A</button>
+            <button id="betA" type="button" onclick="bet('A')">Bet on A</button>
           </div>
         </div>
 
@@ -195,7 +223,7 @@
           </div>
           <div class="small" id="ptsB">—</div>
           <div class="row" style="margin-top:12px">
-            <button id="betB" class="secondary" onclick="bet('B')">Bet on B</button>
+            <button id="betB" class="secondary" type="button" onclick="bet('B')">Bet on B</button>
           </div>
         </div>
       </div>
@@ -209,7 +237,6 @@
 </main>
 
 <script>
-  // Your deployment URL
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzpqVGmZXp5FKwwleLFZ6uXwJJmddcPz9DKkKBD-yRl-Xpx1ySfwblQiqpxETzIk6OYCw/exec";
   const $ = (id) => document.getElementById(id);
 
@@ -235,7 +262,6 @@
     return r.json();
   }
 
-  // Form-encoded POST (avoids Apps Script CORS preflight issues)
   async function apiPost(payload){
     const form = new URLSearchParams();
     for (const [k, v] of Object.entries(payload)) form.append(k, String(v));
@@ -270,9 +296,7 @@
   function loadSession(){
     const n = localStorage.getItem("golfshi_name") || "";
     const p = localStorage.getItem("golfshi_pin") || "";
-    if(n && p){
-      session = { name:n, pin:p };
-    }
+    if(n && p) session = { name:n, pin:p };
   }
 
   function clearSession(){
@@ -283,54 +307,42 @@
 
   function clearSaved(){
     clearSession();
-    // keep them on auth screen, default to returning (so they can re-login)
-    setAuthMode("returning");
-    $("returnName").value = "";
-    $("returnPin").value = "";
     $("newName").value = "";
     $("newPin").value = "";
+    $("returnName").value = "";
+    $("returnPin").value = "";
+    setAuthMode("returning");
     alert("Saved login cleared on this device.");
   }
 
   function setAuthMode(mode){
     const newPanel = $("newUserPanel");
-    const returningPanel = $("returningUserPanel");
+    const retPanel = $("returningUserPanel");
 
     if(mode === "new"){
       newPanel.classList.remove("hidden");
-      returningPanel.classList.add("hidden");
+      retPanel.classList.add("hidden");
+      $("modeNewBtn").classList.remove("secondary");
+      $("modeReturningBtn").classList.add("secondary");
       $("newName").focus();
     } else {
       newPanel.classList.add("hidden");
-      returningPanel.classList.remove("hidden");
+      retPanel.classList.remove("hidden");
+      $("modeNewBtn").classList.add("secondary");
+      $("modeReturningBtn").classList.remove("secondary");
       $("returnName").focus();
     }
-
-    // keep radio buttons in sync even when called from JS
-    const radio = document.querySelector(`input[name="authMode"][value="${mode}"]`);
-    if (radio) radio.checked = true;
   }
 
   async function registerNewUser(){
     const name = $("newName").value.trim();
     const pin  = $("newPin").value.trim();
 
-    if(!name){
-      alert("Enter your name.");
-      $("newName").focus();
-      return;
-    }
-    if(!pin || pin.length < 4){
-      alert("PIN must be at least 4 characters.");
-      $("newPin").focus();
-      return;
-    }
+    if(!name){ alert("Enter your name."); $("newName").focus(); return; }
+    if(!pin || pin.length < 4){ alert("PIN must be at least 4 characters."); $("newPin").focus(); return; }
 
     const res = await apiPost({ action:"register", name, pin });
-    if(!res.ok){
-      alert(res.error || "Register failed");
-      return;
-    }
+    if(!res.ok){ alert(res.error || "Register failed"); return; }
 
     session = { name, pin };
     saveSession();
@@ -343,22 +355,11 @@
     const name = $("returnName").value.trim();
     const pin  = $("returnPin").value.trim();
 
-    if(!name){
-      alert("Enter your name.");
-      $("returnName").focus();
-      return;
-    }
-    if(!pin){
-      alert("Enter your PIN.");
-      $("returnPin").focus();
-      return;
-    }
+    if(!name){ alert("Enter your name."); $("returnName").focus(); return; }
+    if(!pin){ alert("Enter your PIN."); $("returnPin").focus(); return; }
 
     const res = await apiPost({ action:"login", name, pin });
-    if(!res.ok){
-      alert(res.error || "Login failed");
-      return;
-    }
+    if(!res.ok){ alert(res.error || "Login failed"); return; }
 
     session = { name, pin };
     saveSession();
@@ -369,7 +370,6 @@
 
   function logout(){
     clearSession();
-    // reset inputs
     $("newName").value = "";
     $("newPin").value = "";
     $("returnName").value = "";
@@ -380,17 +380,10 @@
 
   async function bet(side){
     const points = Number($("points").value);
-    if(!Number.isFinite(points) || points <= 0){
-      alert("Enter points > 0.");
-      return;
-    }
+    if(!Number.isFinite(points) || points <= 0){ alert("Enter points > 0."); return; }
 
     const res = await apiPost({ action:"bet", name:session.name, pin:session.pin, side, points });
-    if(!res.ok){
-      alert(res.error || "Bet rejected");
-      await refresh();
-      return;
-    }
+    if(!res.ok){ alert(res.error || "Bet rejected"); await refresh(); return; }
 
     render(res.state);
     renderBalance(res.balance);
@@ -400,7 +393,6 @@
     try{
       const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
       if(st.ok) render(st);
-
       const b = await apiGet(`${SCRIPT_URL}?action=balance&name=${encodeURIComponent(session.name)}&pin=${encodeURIComponent(session.pin)}&ts=${Date.now()}`);
       if(b.ok) renderBalance(b);
     }catch(e){}
@@ -453,9 +445,8 @@
     }
   }
 
-  // Boot: auto-login if saved
   (async function boot(){
-    // default UI
+    // Default UI
     setAuthMode("new");
     showAuth();
 
@@ -467,7 +458,7 @@
         render(res.state);
         renderBalance(res.balance);
       } else {
-        // saved creds invalid → show returning login with name prefilled
+        // if saved creds are bad, show returning with name prefilled
         setAuthMode("returning");
         $("returnName").value = session.name || "";
         $("returnPin").value = "";
@@ -477,7 +468,6 @@
     }
   })();
 
-  // Auto-refresh when logged in
   setInterval(()=>{ if(!$("betCard").classList.contains("hidden")) refresh(); }, 5000);
 </script>
 </body>
