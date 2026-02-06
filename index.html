@@ -37,7 +37,7 @@
       padding:14px 16px;
       border-bottom:1px solid var(--line);
       background:rgba(255,255,255,.02);
-      display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap
+      display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start;
     }
     .pill{
       font-size:12px;color:var(--muted);
@@ -54,9 +54,10 @@
       width:100%;padding:12px;border-radius:12px;
       border:1px solid var(--line);
       background:rgba(10,16,40,.55);
-      color:var(--text)
+      color:var(--text);
+      outline:none;
     }
-    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .row>*{flex:1;min-width:200px}
     button{
       border:1px solid var(--line);
@@ -66,7 +67,7 @@
       cursor:pointer;font-weight:900;
     }
     button.secondary{background:rgba(18,26,51,.55)}
-    button:disabled{opacity:.5}
+    button:disabled{opacity:.5;cursor:not-allowed}
 
     .seg{display:flex;gap:12px;flex-wrap:wrap}
     .segBtn{
@@ -83,12 +84,36 @@
       background:rgba(15,23,48,.6);
       padding:14px
     }
-    .name{font-weight:950;margin-bottom:6px}
-    .price{display:flex;justify-content:space-between}
+
+    /* Team header with avatar */
+    .teamHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+    .teamLeft{display:flex;align-items:center;gap:10px;min-width:0}
+    .avatar{
+      width:34px;height:34px;border-radius:12px;
+      display:grid;place-items:center;
+      border:1px solid var(--line);
+      background:
+        radial-gradient(18px 18px at 30% 25%, rgba(255,255,255,.18), rgba(255,255,255,.05)),
+        rgba(20,30,65,.6);
+      font-weight:950;
+      letter-spacing:.5px;
+      flex:0 0 auto;
+    }
+    .teamName{
+      font-weight:950;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .price{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
     .big{font-size:34px;font-weight:980}
     .small{font-size:12px;color:var(--muted)}
-    .preset{display:flex;gap:8px;margin-top:8px}
+    .preset{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
     .preset button{padding:10px 12px}
+
+    /* Countdown */
+    .countStrong{color:var(--text);font-weight:900}
     .hidden{display:none!important}
   </style>
 </head>
@@ -115,17 +140,17 @@
 
     <div id="newUserPanel" style="margin-top:14px">
       <label>Name</label>
-      <input id="newName" placeholder="Enter your name" />
+      <input id="newName" placeholder="Enter your name" autocomplete="name" />
       <label style="margin-top:10px">PIN (4+ chars)</label>
-      <input id="newPin" type="password" placeholder="Enter PIN" />
+      <input id="newPin" type="password" placeholder="Enter PIN" autocomplete="new-password" />
       <button style="margin-top:12px" onclick="registerNewUser()">Create account</button>
     </div>
 
     <div id="returningUserPanel" class="hidden" style="margin-top:14px">
       <label>Name</label>
-      <input id="returnName" />
+      <input id="returnName" placeholder="Enter your name" autocomplete="name" />
       <label style="margin-top:10px">PIN</label>
-      <input id="returnPin" type="password" />
+      <input id="returnPin" type="password" placeholder="Enter PIN" autocomplete="current-password" />
       <button style="margin-top:12px" onclick="loginReturningUser()">Login</button>
     </div>
   </div>
@@ -137,6 +162,7 @@
     <div class="pill" id="statusPill"></div>
     <div class="pill" id="userPill"></div>
     <div class="pill" id="linePill"></div>
+    <div class="pill" id="countPill"><strong>Locks:</strong> <span class="countStrong" id="countdown">—</span></div>
   </div>
 
   <div class="bd">
@@ -160,15 +186,28 @@
 
     <div class="market">
       <div class="side">
-        <div class="name" id="teamA"></div>
-        <div class="price"><div class="big" id="pA"></div><div class="small">implied</div></div>
-        <div class="small" id="ptsA"></div>
+        <div class="teamHead">
+          <div class="teamLeft">
+            <div class="avatar" id="avA">A</div>
+            <div class="teamName" id="teamA">Team A</div>
+          </div>
+        </div>
+
+        <div class="price"><div class="big" id="pA">—</div><div class="small">implied</div></div>
+        <div class="small" id="ptsA">—</div>
         <button id="betA" onclick="bet('A')">Bet on A</button>
       </div>
+
       <div class="side">
-        <div class="name" id="teamB"></div>
-        <div class="price"><div class="big" id="pB"></div><div class="small">implied</div></div>
-        <div class="small" id="ptsB"></div>
+        <div class="teamHead">
+          <div class="teamLeft">
+            <div class="avatar" id="avB">B</div>
+            <div class="teamName" id="teamB">Team B</div>
+          </div>
+        </div>
+
+        <div class="price"><div class="big" id="pB">—</div><div class="small">implied</div></div>
+        <div class="small" id="ptsB">—</div>
         <button id="betB" class="secondary" onclick="bet('B')">Bet on B</button>
       </div>
     </div>
@@ -177,77 +216,231 @@
 </main>
 
 <script>
-const SCRIPT_URL="https://script.google.com/macros/s/AKfycbzpqVGmZXp5FKwwleLFZ6uXwJJmddcPz9DKkKBD-yRl-Xpx1ySfwblQiqpxETzIk6OYCw/exec";
-const $=id=>document.getElementById(id);
-let session={name:"",pin:""};
+  // Backend
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzpqVGmZXp5FKwwleLFZ6uXwJJmddcPz9DKkKBD-yRl-Xpx1ySfwblQiqpxETzIk6OYCw/exec";
+  const $ = (id) => document.getElementById(id);
+  let session = { name:"", pin:"" };
 
-function setPts(n){$("points").value=n}
-function showBetting(){authCard.classList.add("hidden");betCard.classList.remove("hidden")}
-function showAuth(){betCard.classList.add("hidden");authCard.classList.remove("hidden")}
-function saveSession(){localStorage.setItem("golfshi_name",session.name);localStorage.setItem("golfshi_pin",session.pin)}
-function loadSession(){session={name:localStorage.getItem("golfshi_name")||"",pin:localStorage.getItem("golfshi_pin")||""}}
-function clearSession(){localStorage.clear();session={name:"",pin:""}}
+  // Countdown target: 9:55 AM on 2/27/2026 (USER'S LOCAL TIME)
+  // If you want this in a specific timezone instead, tell me which one and I’ll lock it to that zone.
+  const LOCK_AT_LOCAL = new Date(2026, 1, 27, 9, 55, 0); // month is 0-based (1 = Feb)
 
-function setAuthMode(m){
-  newUserPanel.classList.toggle("hidden",m!=="new");
-  returningUserPanel.classList.toggle("hidden",m!=="returning");
-  modeNewBtn.classList.toggle("secondary",m!=="new");
-  modeReturningBtn.classList.toggle("secondary",m!=="returning");
-}
+  function setPts(n){ $("points").value = n; }
 
-async function apiPost(p){
-  const f=new URLSearchParams(p);
-  const r=await fetch(SCRIPT_URL,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:f});
-  return r.json()
-}
-
-async function registerNewUser(){
-  const name=newName.value.trim(),pin=newPin.value.trim();
-  if(!name||pin.length<4)return alert("Enter name and 4+ char PIN");
-  const r=await apiPost({action:"register",name,pin});
-  if(!r.ok)return alert(r.error);
-  session={name,pin};saveSession();showBetting();render(r.state);renderBalance(r.balance)
-}
-
-async function loginReturningUser(){
-  const name=returnName.value.trim(),pin=returnPin.value.trim();
-  if(!name||!pin)return alert("Enter name and PIN");
-  const r=await apiPost({action:"login",name,pin});
-  if(!r.ok)return alert(r.error);
-  session={name,pin};saveSession();showBetting();render(r.state);renderBalance(r.balance)
-}
-
-function logout(){clearSession();setAuthMode("returning");showAuth()}
-
-async function bet(side){
-  const pts=+points.value;
-  if(pts<=0)return;
-  const r=await apiPost({action:"bet",name:session.name,pin:session.pin,side,points:pts});
-  if(!r.ok)return alert(r.error);
-  render(r.state);renderBalance(r.balance)
-}
-
-function renderBalance(b){remaining.textContent=b.remaining;maxPts.textContent=b.maxPts}
-
-function render(st){
-  teamA.textContent=st.teams.A;teamB.textContent=st.teams.B;
-  pA.textContent=Math.round(st.odds.pA*100)+"%";
-  pB.textContent=Math.round(st.odds.pB*100)+"%";
-  ptsA.textContent=st.totals.ptsA+" pts on A";
-  ptsB.textContent=st.totals.ptsB+" pts on B";
-  statusPill.textContent="Status: "+(st.locked?"LOCKED":"OPEN");
-  userPill.textContent="You: "+session.name;
-  linePill.textContent=`Line: ${Math.round(st.odds.pA*100)}/${Math.round(st.odds.pB*100)}`;
-  betA.disabled=st.locked;betB.disabled=st.locked
-}
-
-(async function(){
-  setAuthMode("new");showAuth();loadSession();
-  if(session.name&&session.pin){
-    const r=await apiPost({action:"login",name:session.name,pin:session.pin});
-    if(r.ok){showBetting();render(r.state);renderBalance(r.balance)}
+  function showBetting(){
+    $("authCard").classList.add("hidden");
+    $("betCard").classList.remove("hidden");
   }
-})();
+
+  function showAuth(){
+    $("betCard").classList.add("hidden");
+    $("authCard").classList.remove("hidden");
+    $("authPill").innerHTML = `<strong>Status:</strong> not logged in`;
+  }
+
+  function saveSession(){
+    localStorage.setItem("golfshi_name", session.name);
+    localStorage.setItem("golfshi_pin", session.pin);
+  }
+
+  function loadSession(){
+    session = {
+      name: localStorage.getItem("golfshi_name") || "",
+      pin:  localStorage.getItem("golfshi_pin") || ""
+    };
+  }
+
+  function clearSession(){
+    localStorage.removeItem("golfshi_name");
+    localStorage.removeItem("golfshi_pin");
+    session = { name:"", pin:"" };
+  }
+
+  function setAuthMode(mode){
+    $("newUserPanel").classList.toggle("hidden", mode !== "new");
+    $("returningUserPanel").classList.toggle("hidden", mode !== "returning");
+    $("modeNewBtn").classList.toggle("secondary", mode !== "new");
+    $("modeReturningBtn").classList.toggle("secondary", mode !== "returning");
+  }
+
+  async function apiPost(payload){
+    const form = new URLSearchParams();
+    for (const [k,v] of Object.entries(payload)) form.append(k, String(v));
+
+    const r = await fetch(SCRIPT_URL, {
+      method:"POST",
+      headers:{ "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8" },
+      body: form.toString()
+    });
+    return r.json();
+  }
+
+  async function apiGet(url){
+    const r = await fetch(url);
+    return r.json();
+  }
+
+  async function registerNewUser(){
+    const name = $("newName").value.trim();
+    const pin  = $("newPin").value.trim();
+    if(!name){ alert("Enter your name."); return; }
+    if(!pin || pin.length < 4){ alert("PIN must be at least 4 characters."); return; }
+
+    const res = await apiPost({ action:"register", name, pin });
+    if(!res.ok){ alert(res.error || "Register failed"); return; }
+
+    session = { name, pin };
+    saveSession();
+
+    showBetting();
+    render(res.state);
+    renderBalance(res.balance);
+  }
+
+  async function loginReturningUser(){
+    const name = $("returnName").value.trim();
+    const pin  = $("returnPin").value.trim();
+    if(!name){ alert("Enter your name."); return; }
+    if(!pin){ alert("Enter your PIN."); return; }
+
+    const res = await apiPost({ action:"login", name, pin });
+    if(!res.ok){ alert(res.error || "Login failed"); return; }
+
+    session = { name, pin };
+    saveSession();
+
+    showBetting();
+    render(res.state);
+    renderBalance(res.balance);
+  }
+
+  function logout(){
+    clearSession();
+    $("newName").value = "";
+    $("newPin").value = "";
+    $("returnName").value = "";
+    $("returnPin").value = "";
+    setAuthMode("returning");
+    showAuth();
+  }
+
+  async function bet(side){
+    const pts = Number($("points").value);
+    if(!Number.isFinite(pts) || pts <= 0){ alert("Enter points > 0."); return; }
+
+    const res = await apiPost({ action:"bet", name:session.name, pin:session.pin, side, points:pts });
+    if(!res.ok){ alert(res.error || "Bet rejected"); await refresh(); return; }
+
+    render(res.state);
+    renderBalance(res.balance);
+  }
+
+  async function refresh(){
+    try{
+      const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
+      if(st.ok) render(st);
+
+      const b = await apiGet(`${SCRIPT_URL}?action=balance&name=${encodeURIComponent(session.name)}&pin=${encodeURIComponent(session.pin)}&ts=${Date.now()}`);
+      if(b.ok) renderBalance(b);
+    }catch(e){}
+  }
+
+  function renderBalance(b){
+    $("remaining").textContent = b.remaining;
+    $("maxPts").textContent = b.maxPts;
+  }
+
+  function initialsFromTeamName(name){
+    const s = String(name || "").replace(/&/g, " ").replace(/\s+/g, " ").trim();
+    if(!s) return "?";
+    const parts = s.split(" ").filter(Boolean);
+    const letters = [];
+    for(const p of parts){
+      if(p.toLowerCase() === "and" || p === "vs" || p === "v") continue;
+      letters.push(p[0].toUpperCase());
+      if(letters.length >= 2) break;
+    }
+    if(letters.length === 0) return parts[0][0].toUpperCase();
+    if(letters.length === 1 && parts.length > 1) letters.push(parts[1][0].toUpperCase());
+    return letters.join("");
+  }
+
+  function render(st){
+    const locked = st.locked;
+    const teams = st.teams || { A:"Team A", B:"Team B" };
+
+    $("teamA").textContent = teams.A;
+    $("teamB").textContent = teams.B;
+
+    $("avA").textContent = initialsFromTeamName(teams.A);
+    $("avB").textContent = initialsFromTeamName(teams.B);
+
+    $("statusPill").innerHTML = `<strong>Status:</strong> ${locked ? "LOCKED" : "OPEN"}`;
+    $("userPill").innerHTML = `<strong>You:</strong> ${session.name || "—"}`;
+
+    // Odds line
+    const o = st.odds;
+    const t = st.totals;
+
+    $("linePill").innerHTML = `<strong>Line:</strong> ${Math.round(o.pA*100)}/${Math.round(o.pB*100)}`;
+
+    $("pA").textContent = Math.round(o.pA*100) + "%";
+    $("pB").textContent = Math.round(o.pB*100) + "%";
+    $("ptsA").textContent = `${t.ptsA} pts on A`;
+    $("ptsB").textContent = `${t.ptsB} pts on B`;
+
+    $("betA").disabled = locked;
+    $("betB").disabled = locked;
+  }
+
+  function fmtCountdown(ms){
+    if(ms <= 0) return "LOCK TIME";
+    const totalSec = Math.floor(ms/1000);
+    const d = Math.floor(totalSec / 86400);
+    const h = Math.floor((totalSec % 86400) / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+
+    const hh = String(h).padStart(2,"0");
+    const mm = String(m).padStart(2,"0");
+    const ss = String(s).padStart(2,"0");
+
+    return d > 0 ? `${d}d ${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`;
+  }
+
+  function tickCountdown(){
+    const ms = LOCK_AT_LOCAL.getTime() - Date.now();
+    $("countdown").textContent = fmtCountdown(ms);
+  }
+
+  // Boot
+  (async function boot(){
+    setAuthMode("new");
+    showAuth();
+
+    tickCountdown();
+    setInterval(tickCountdown, 1000);
+
+    loadSession();
+    if(session.name && session.pin){
+      const res = await apiPost({ action:"login", name:session.name, pin:session.pin });
+      if(res.ok){
+        showBetting();
+        render(res.state);
+        renderBalance(res.balance);
+      } else {
+        // saved creds bad -> show returning mode
+        setAuthMode("returning");
+        $("returnName").value = session.name || "";
+        $("returnPin").value = "";
+        clearSession();
+        showAuth();
+      }
+    }
+  })();
+
+  // Auto-refresh when logged in
+  setInterval(()=>{ if(!$("betCard").classList.contains("hidden")) refresh(); }, 5000);
 </script>
 </body>
 </html>
