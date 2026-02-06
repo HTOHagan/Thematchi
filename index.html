@@ -3,20 +3,21 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Golfshi — Points Market</title>
+  <title>Golfshi — Dinner Odds (Points)</title>
   <style>
     :root{
-      --bg:#0b1020; --card:#121a33; --text:#e9eeff; --muted:#a8b3d6;
-      --line:rgba(255,255,255,.08); --good:#38d996; --warn:#ffcc66; --bad:#ff6b6b;
+      --bg:#0b1020; --text:#e9eeff; --muted:#a8b3d6; --line:rgba(255,255,255,.08);
       --shadow:0 12px 30px rgba(0,0,0,.35); --radius:18px;
+      --good:#38d996; --warn:#ffcc66; --bad:#ff6b6b;
     }
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background: radial-gradient(1200px 700px at 20% 10%, rgba(56,217,150,.14), transparent 55%),
-                  radial-gradient(900px 650px at 85% 20%, rgba(80,140,255,.14), transparent 55%),
-                  var(--bg);
+      background:
+        radial-gradient(1200px 700px at 20% 10%, rgba(56,217,150,.14), transparent 55%),
+        radial-gradient(900px 650px at 85% 20%, rgba(80,140,255,.14), transparent 55%),
+        var(--bg);
       color:var(--text);
       min-height:100vh;
     }
@@ -95,6 +96,7 @@
     .price{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:0 0 10px;}
     .price .big{font-size:30px; font-weight:900; letter-spacing:-.5px;}
     .price .small{color:var(--muted); font-size:12px;}
+
     .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
     button{
       border:1px solid var(--line);
@@ -111,6 +113,7 @@
     button.secondary{background: rgba(18,26,51,.55);}
     button.danger{background: rgba(255,107,107,.18);}
     button:disabled{opacity:.45; cursor:not-allowed}
+
     .banner{
       border-top:1px solid var(--line);
       padding:14px 16px;
@@ -135,16 +138,16 @@
       border:1px solid var(--line);
       border-radius: 14px;
       padding:12px;
-      min-height:170px;
+      min-height:190px;
       color: rgba(233,238,255,.92);
     }
     table{
       width:100%;
       border-collapse:collapse;
-      overflow:hidden;
       border-radius:14px;
       border:1px solid var(--line);
       background: rgba(10,16,40,.35);
+      overflow:hidden;
     }
     th, td{
       text-align:left;
@@ -155,7 +158,6 @@
     }
     th{color:rgba(233,238,255,.85); font-weight:800; background: rgba(255,255,255,.03);}
     td strong{color:rgba(233,238,255,.92)}
-    .smallmuted{color:var(--muted); font-size:12px;}
   </style>
 </head>
 
@@ -165,8 +167,8 @@
     <div class="brand">
       <div class="logo">G$</div>
       <div>
-        <h1>Golfshi — Points Market</h1>
-        <div class="subtitle">24 people · 100 points max each · odds move until lock</div>
+        <h1>Golfshi — Dinner Odds (Points)</h1>
+        <div class="subtitle">24 people · 100 points max · points move the line · line locks pre-match</div>
       </div>
     </div>
     <div class="chips" id="headerChips"></div>
@@ -180,7 +182,10 @@
       <div class="hd">
         <div>
           <h2>Market</h2>
-          <div class="hint">People bet points on A or B. The implied odds update automatically until the market locks at match start.</div>
+          <div class="hint">
+            Points are for price discovery only. The loser buys dinner.
+            If the favorite loses, the market makes them pay extra.
+          </div>
         </div>
         <div class="pill" id="lockPill"><strong>Status:</strong> OPEN</div>
       </div>
@@ -188,23 +193,23 @@
       <div class="bd">
         <div class="row">
           <div>
-            <label>Player A</label>
-            <input id="aName" type="text" value="Player A" />
+            <label>Team / Player A</label>
+            <input id="aName" type="text" value="Team A" />
           </div>
           <div>
-            <label>Player B</label>
-            <input id="bName" type="text" value="Player B" />
+            <label>Team / Player B</label>
+            <input id="bName" type="text" value="Team B" />
           </div>
         </div>
 
         <div class="row" style="margin-top:10px">
           <div>
-            <label>Match start time (locks automatically)</label>
+            <label>Match start time (auto-lock)</label>
             <input id="matchStart" type="datetime-local" />
-            <div class="note">At this time, betting locks and the line freezes.</div>
+            <div class="note">At match start, betting locks and the line freezes.</div>
           </div>
           <div>
-            <label>Manual lock / unlock</label>
+            <label>Manual lock / reset</label>
             <div class="row" style="margin:0">
               <button id="lockBtn" class="danger" onclick="toggleLock()">Lock now</button>
               <button class="secondary" onclick="resetAll()">Reset all</button>
@@ -214,72 +219,67 @@
 
         <div class="row" style="margin-top:10px">
           <div>
-            <label>Line-smoothing (AMM liquidity)</label>
+            <label>Line smoothing (liquidity)</label>
             <input id="liquidity" type="number" min="1" max="500" value="60" />
-            <div class="note">Higher = line moves less from bets. (Think "house liquidity".)</div>
+            <div class="note">Higher = line moves less from bets.</div>
           </div>
           <div>
             <label>Each person max points</label>
             <input id="maxPts" type="number" min="10" max="500" value="100" />
-            <div class="note">Default 100. Everyone starts with this balance.</div>
           </div>
         </div>
 
         <div class="row" style="margin-top:10px">
           <div>
-            <label>Penalty threshold (spread in % points)</label>
-            <input id="threshold" type="number" min="5" max="50" value="20" />
-            <div class="note">If odds are 60/40 or more lopsided (20pt spread), penalty applies to the favorite *if they win*.</div>
-          </div>
-          <div>
-            <label>Penalty size</label>
-            <input id="penaltySize" type="number" min="1" max="20" value="2" />
-            <div class="note">Used at settlement: strokes / dollars / "shots".</div>
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div>
-            <label>Penalty mode</label>
-            <select id="penaltyMode">
-              <option value="strokes">Strokes</option>
-              <option value="dollars">Dollars ($)</option>
-              <option value="shots">"Shots" at dinner</option>
-            </select>
-          </div>
-          <div>
-            <label>Base starting line (optional)</label>
+            <label>Base starting line (prior)</label>
             <select id="baseLine">
               <option value="0.50">50 / 50</option>
               <option value="0.55" selected>55 / 45</option>
               <option value="0.60">60 / 40</option>
               <option value="0.65">65 / 35</option>
             </select>
-            <div class="note">This is the "prior" before any points come in.</div>
+          </div>
+          <div>
+            <label>Penalty trigger spread (percentage points)</label>
+            <input id="thresholdPts" type="number" min="5" max="50" value="20" />
+            <div class="note">Example: 20 means 60/40 or worse triggers “favorite loss” penalty.</div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div>
+            <label>Dollars per “favorite edge” point</label>
+            <input id="dollarsPerPoint" type="number" min="1" max="50" value="2" />
+            <div class="note">If the favorite was 72%, edge = 22 points → extra = 22 × this.</div>
+          </div>
+          <div>
+            <label>Base dinner cost ($)</label>
+            <input id="dinnerCost" type="number" min="0" max="5000" value="300" />
+            <div class="note">Used only at settlement to compute total owed.</div>
           </div>
         </div>
 
         <div class="market">
           <div class="side">
-            <div class="name" id="sideAName">Player A</div>
+            <div class="name" id="sideAName">Team A</div>
             <div class="price">
               <div class="big" id="priceA">50¢</div>
               <div class="small">Implied win prob</div>
             </div>
             <div class="chips">
-              <span class="chip"><strong id="ptsA">0</strong> points on A</span>
+              <span class="chip"><strong id="ptsA">0</strong> pts on A</span>
               <span class="chip"><strong id="mlA">-100</strong> moneyline*</span>
             </div>
           </div>
 
           <div class="side">
-            <div class="name" id="sideBName">Player B</div>
+            <div class="name" id="sideBName">Team B</div>
             <div class="price">
               <div class="big" id="priceB">50¢</div>
               <div class="small">Implied win prob</div>
             </div>
             <div class="chips">
-              <span class="chip"><strong id="ptsB">0</strong> points on B</span>
+              <span class="chip"><strong id="ptsB">0</strong> pts on B</span>
               <span class="chip"><strong id="mlB">+100</strong> moneyline*</span>
             </div>
           </div>
@@ -297,20 +297,18 @@
         </div>
 
         <div class="btns">
-          <button id="betA" onclick="placeBet('A')">Bet on Player A</button>
-          <button id="betB" class="secondary" onclick="placeBet('B')">Bet on Player B</button>
+          <button id="betA" onclick="placeBet('A')">Bet points on A</button>
+          <button id="betB" class="secondary" onclick="placeBet('B')">Bet points on B</button>
         </div>
 
-        <div class="note">
-          *Moneyline is just a goofy conversion of implied probability. This is a joke site.
-        </div>
+        <div class="note">*Moneyline is a goofy conversion of implied probability. This is a joke site.</div>
       </div>
 
       <div class="banner" id="penaltyBanner">
         <div class="badge"></div>
         <div>
-          <h3 id="penaltyTitle">Penalty: none</h3>
-          <p id="penaltyText">Odds aren't lopsided enough to trigger the "favorite penalty".</p>
+          <h3 id="penaltyTitle">Favorite-loss penalty: ready</h3>
+          <p id="penaltyText">If the favorite loses AND spread ≥ threshold, extra dollars apply.</p>
         </div>
       </div>
     </section>
@@ -319,8 +317,8 @@
     <aside class="card">
       <div class="hd">
         <div>
-          <h2>Roster, Balances, Settlement</h2>
-          <div class="hint">Everyone starts with max points. Bets reduce balance. Settlement tells you dinner + penalty outcome.</div>
+          <h2>Roster + Settle</h2>
+          <div class="hint">Everyone starts with max points. Points just move odds; settlement tells loser’s bill.</div>
         </div>
         <button class="secondary" onclick="clearLedger()">Clear log</button>
       </div>
@@ -338,8 +336,7 @@
           </div>
         </div>
 
-        <label>Roster (edit names)</label>
-        <div class="note" style="margin-top:6px">Click a name in the table to edit it.</div>
+        <label>Roster (click a name to edit)</label>
         <div style="margin-top:10px; max-height:280px; overflow:auto; border-radius:14px;">
           <table id="rosterTable"></table>
         </div>
@@ -358,21 +355,19 @@
 
   const state = {
     locked: false,
-    marketId: "DINNER-POINTS-1",
-    aName: "Player A",
-    bName: "Player B",
+    aName: "Team A",
+    bName: "Team B",
     maxPts: 100,
     liquidity: 60,
-    baseLine: 0.55, // prior pA
-    threshold: 0.20,
-    penaltySize: 2,
-    penaltyMode: "strokes",
-    matchStart: null, // Date
-    people: [], // {id, name, balance, betA, betB}
+    baseLine: 0.55,           // prior pA
+    thresholdPts: 20,         // spread in percentage points (e.g., 20 means 60/40)
+    dollarsPerPoint: 2,       // $ per favorite edge point
+    dinnerCost: 300,          // base dinner cost
+    matchStart: null,         // Date
+    people: [],               // {id, name, balance, betA, betB}
   };
 
   function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
-  function fmtPct(p){ return Math.round(p*100) + "%"; }
   function fmtCents(p){ return Math.round(p*100) + "¢"; }
 
   function impliedToMoneyline(p){
@@ -383,19 +378,23 @@
   }
 
   function nowLocalISOForDatetimeLocal(d){
-    // datetime-local expects "YYYY-MM-DDTHH:MM"
     const pad = (x)=> String(x).padStart(2,"0");
     const yyyy = d.getFullYear();
     const mm = pad(d.getMonth()+1);
     const dd = pad(d.getDate());
     const hh = pad(d.getHours());
     const mi = pad(d.getMinutes());
-    return \
-    `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+    return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+  }
+
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
   }
 
   function init(){
-    // default match start: today + 2 hours
+    // default match start: now + 2 hours
     const d = new Date(Date.now() + 2*60*60*1000);
     $("matchStart").value = nowLocalISOForDatetimeLocal(d);
     state.matchStart = new Date($("matchStart").value);
@@ -410,34 +409,32 @@
     }));
 
     // wire inputs
-    $("aName").addEventListener("input", e => { state.aName = e.target.value || "Player A"; updateUI(); });
-    $("bName").addEventListener("input", e => { state.bName = e.target.value || "Player B"; updateUI(); });
+    $("aName").addEventListener("input", e => { state.aName = e.target.value || "Team A"; updateUI(); });
+    $("bName").addEventListener("input", e => { state.bName = e.target.value || "Team B"; updateUI(); });
 
     $("liquidity").addEventListener("input", e => { state.liquidity = clamp(Number(e.target.value)||60, 1, 500); updateUI(); });
     $("maxPts").addEventListener("input", e => { state.maxPts = clamp(Number(e.target.value)||100, 10, 500); resetBalancesToMax(); updateUI(); });
     $("baseLine").addEventListener("change", e => { state.baseLine = Number(e.target.value); updateUI(); });
-    $("threshold").addEventListener("input", e => { state.threshold = clamp((Number(e.target.value)||20)/100, 0.05, 0.50); updateUI(); });
-    $("penaltySize").addEventListener("input", e => { state.penaltySize = clamp(Number(e.target.value)||2, 1, 20); updateUI(); });
-    $("penaltyMode").addEventListener("change", e => { state.penaltyMode = e.target.value; updateUI(); });
+
+    $("thresholdPts").addEventListener("input", e => { state.thresholdPts = clamp(Number(e.target.value)||20, 5, 50); updateUI(); });
+    $("dollarsPerPoint").addEventListener("input", e => { state.dollarsPerPoint = clamp(Number(e.target.value)||2, 1, 50); updateUI(); });
+    $("dinnerCost").addEventListener("input", e => { state.dinnerCost = clamp(Number(e.target.value)||0, 0, 5000); updateUI(); });
 
     $("matchStart").addEventListener("change", e => {
-      const val = e.target.value;
-      state.matchStart = val ? new Date(val) : null;
+      state.matchStart = e.target.value ? new Date(e.target.value) : null;
       updateUI();
     });
 
     clearLedger();
     log("Market initialized. 24 bettors loaded. Everyone starts with max points.");
     updateUI();
-
     setInterval(tickLockTimer, 500);
   }
 
   function tickLockTimer(){
     if(state.locked) return;
     if(!state.matchStart) return;
-    const now = new Date();
-    if(now >= state.matchStart){
+    if(new Date() >= state.matchStart){
       state.locked = true;
       log("AUTO-LOCK: Match start reached. Market is now LOCKED.");
       updateUI();
@@ -472,57 +469,56 @@
   }
 
   function impliedPA(){
-    // Simple AMM with prior + liquidity:
-    // add "virtual points" based on baseLine and liquidity so it has a starting line.
+    // Prior + liquidity "virtual points"
     const {ptsA, ptsB} = totals();
     const L = state.liquidity;
-    const priorA = state.baseLine; // 0..1
-    const vA = L * priorA;
-    const vB = L * (1 - priorA);
-
+    const vA = L * state.baseLine;
+    const vB = L * (1 - state.baseLine);
     const denom = (ptsA + vA) + (ptsB + vB);
     if(denom <= 0) return 0.5;
     return (ptsA + vA) / denom;
   }
 
-  function computePenalty(pA){
+  function favoriteInfo(pA){
     const pB = 1 - pA;
-    const diff = Math.abs(pA - pB);
-    const favored = (pA === pB) ? null : (pA > pB ? "A" : "B");
-    const overThreshold = diff >= state.threshold;
-    return {diff, favored, overThreshold};
+    if(pA === pB) return {fav:null, favProb:0.5, dogProb:0.5};
+    if(pA > pB) return {fav:"A", favProb:pA, dogProb:pB};
+    return {fav:"B", favProb:pB, dogProb:pA};
   }
 
-  function penaltyLabel(){
-    if(state.penaltyMode === "strokes") return "strokes";
-    if(state.penaltyMode === "dollars") return "dollars";
-    return "shots";
+  function favoriteEdgePoints(favProb){
+    // edge over 50%, in percentage points, rounded
+    return Math.max(0, Math.round((favProb - 0.50) * 100));
+  }
+
+  function penaltyTriggers(favProb){
+    // trigger based on spread between fav and dog, i.e. 2*edge
+    // spreadPts = round(|pA - pB|*100) = round(2*edge)
+    const spreadPts = Math.round(Math.abs(favProb - (1 - favProb)) * 100);
+    return spreadPts >= state.thresholdPts;
   }
 
   function log(line){
     const el = $("ledger");
-    const now = new Date();
-    const ts = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    const ts = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
     el.textContent = `[${ts}] ${line}\n` + el.textContent;
   }
   function clearLedger(){ $("ledger").textContent = ""; }
 
   function renderBettorSelect(){
-    const sel = $("bettor");
-    sel.innerHTML = state.people.map(p=>{
-      return `<option value="${p.id}">${p.name} (bal ${p.balance})</option>`;
-    }).join("");
+    $("bettor").innerHTML = state.people.map(p=>(
+      `<option value="${p.id}">${escapeHtml(p.name)} (bal ${p.balance})</option>`
+    )).join("");
   }
 
   function renderWinnerSelect(){
     $("winnerSelect").innerHTML = `
-      <option value="A">${state.aName} wins</option>
-      <option value="B">${state.bName} wins</option>
+      <option value="A">${escapeHtml(state.aName)} wins</option>
+      <option value="B">${escapeHtml(state.bName)} wins</option>
     `;
   }
 
   function renderRosterTable(){
-    const tbl = $("rosterTable");
     const rows = state.people.map(p => `
       <tr>
         <td><strong contenteditable="true" data-edit="${p.id}" spellcheck="false">${escapeHtml(p.name)}</strong></td>
@@ -532,20 +528,14 @@
       </tr>
     `).join("");
 
-    tbl.innerHTML = `
+    $("rosterTable").innerHTML = `
       <thead>
-        <tr>
-          <th>Name</th>
-          <th>Balance</th>
-          <th>Bet on A</th>
-          <th>Bet on B</th>
-        </tr>
+        <tr><th>Name</th><th>Balance</th><th>Bet on A</th><th>Bet on B</th></tr>
       </thead>
       <tbody>${rows}</tbody>
     `;
 
-    // hook editable names
-    tbl.querySelectorAll('[data-edit]').forEach(el=>{
+    $("rosterTable").querySelectorAll('[data-edit]').forEach(el=>{
       el.addEventListener('blur', (e)=>{
         const id = Number(e.target.getAttribute('data-edit'));
         const person = state.people.find(x=>x.id===id);
@@ -554,28 +544,13 @@
         updateUI();
       });
       el.addEventListener('keydown', (e)=>{
-        if(e.key === "Enter"){
-          e.preventDefault();
-          e.target.blur();
-        }
+        if(e.key === "Enter"){ e.preventDefault(); e.target.blur(); }
       });
     });
   }
 
-  function escapeHtml(s){
-    return String(s)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-
   function placeBet(side){
-    if(state.locked){
-      log("REJECTED: Market is LOCKED. No more bets.");
-      return;
-    }
+    if(state.locked){ log("REJECTED: Market is LOCKED. No more bets."); return; }
 
     const bettorId = Number($("bettor").value);
     const pts = clamp(Number($("betPts").value)||0, 1, state.maxPts);
@@ -587,39 +562,53 @@
       return;
     }
 
-    // deduct and apply
     person.balance -= pts;
     if(side === "A") person.betA += pts;
     if(side === "B") person.betB += pts;
 
-    const who = side === "A" ? state.aName : state.bName;
-    log(`BET: ${person.name} puts ${pts} pts on ${who}.`);
+    log(`BET: ${person.name} puts ${pts} pts on ${(side==="A")?state.aName:state.bName}.`);
     updateUI();
   }
 
   function settle(){
-    const winner = $("winnerSelect").value;
+    const winner = $("winnerSelect").value; // 'A' or 'B'
+    const loser = (winner === "A") ? "B" : "A";
     const winnerName = (winner === "A") ? state.aName : state.bName;
-    const loserName  = (winner === "A") ? state.bName : state.aName;
+    const loserName  = (loser === "A") ? state.aName : state.bName;
 
     const pA = impliedPA();
-    const {diff, favored, overThreshold} = computePenalty(pA);
-    const spreadPts = Math.round(diff*100);
+    const {fav, favProb, dogProb} = favoriteInfo(pA);
 
-    log(`SETTLE: ${winnerName} wins. ${loserName} pays for dinner. ✅`);
+    // compute final spread and penalty params
+    const spreadPts = Math.round(Math.abs(pA - (1-pA)) * 100);
+    const edgePts = favoriteEdgePoints(favProb);
+    const triggers = penaltyTriggers(favProb);
 
-    if(favored && overThreshold){
-      const favoredName = (favored === "A") ? state.aName : state.bName;
-      if(winner === favored){
-        log(`PENALTY: ${favoredName} was favored by ${spreadPts}pts → +${state.penaltySize} ${penaltyLabel()} to the favorite.`);
-        log(`(Interpret however you want: spots strokes, extra $ owed, "shots", etc.)`);
-      } else {
-        log(`PENALTY CHECK: Favorite was ${favoredName}, but underdog won — no penalty needed.`);
-      }
+    log(`LOCKED LINE: ${state.aName} ${Math.round(pA*100)}% / ${state.bName} ${Math.round((1-pA)*100)}%`);
+    log(`RESULT: ${winnerName} wins. ${loserName} loses.`);
+
+    // base dinner
+    const base = state.dinnerCost;
+
+    // favorite-loss penalty: applies ONLY if the favorite loses AND spread >= threshold
+    let extra = 0;
+    let reason = "No favorite-loss penalty.";
+    if(fav && loser === fav && triggers){
+      extra = edgePts * state.dollarsPerPoint;
+      reason = `Favorite-loss penalty: favorite edge ${edgePts}pts × $${state.dollarsPerPoint}/pt = $${extra}.`;
+    } else if(fav && loser === fav && !triggers){
+      reason = `Favorite lost but spread ${spreadPts}pts < threshold ${state.thresholdPts}pts → no extra.`;
+    } else if(fav && loser !== fav){
+      reason = "Underdog lost (expected). No extra.";
     } else {
-      log(`PENALTY: none (spread ${spreadPts}pts; threshold ${Math.round(state.threshold*100)}pts).`);
+      reason = "No clear favorite. No extra.";
     }
 
+    const totalOwed = base + extra;
+
+    log(`DINNER: Loser (${loserName}) pays base dinner $${base}.`);
+    log(reason);
+    log(`TOTAL OWED BY LOSER: $${totalOwed}.`);
     log("—");
   }
 
@@ -638,66 +627,60 @@
     $("mlA").textContent = impliedToMoneyline(pA);
     $("mlB").textContent = impliedToMoneyline(pB);
 
-    // lock pill + buttons
     $("lockPill").innerHTML = `<strong>Status:</strong> ${state.locked ? "LOCKED" : "OPEN"}`;
     $("lockPill").style.borderColor = state.locked ? "rgba(255,107,107,.35)" : "rgba(56,217,150,.25)";
     $("lockBtn").textContent = state.locked ? "Unlock" : "Lock now";
     $("betA").disabled = state.locked;
     $("betB").disabled = state.locked;
 
-    // header chips
-    const ms = state.matchStart ? state.matchStart : null;
-    const lockStr = ms ? ms.toLocaleString() : "not set";
+    const ms = state.matchStart ? state.matchStart.toLocaleString() : "not set";
     $("headerChips").innerHTML = `
       <span class="chip"><strong>24 bettors</strong> · ${state.maxPts} pts each</span>
       <span class="chip"><strong>Total in:</strong> ${total} pts</span>
       <span class="chip"><strong>Line:</strong> ${Math.round(pA*100)}/${Math.round(pB*100)}</span>
-      <span class="chip"><strong>Locks:</strong> ${escapeHtml(lockStr)}</span>
+      <span class="chip"><strong>Locks:</strong> ${escapeHtml(ms)}</span>
     `;
 
-    // rules chips
-    const {diff, favored, overThreshold} = computePenalty(pA);
-    const spreadPts = Math.round(diff*100);
-    const favoredName = favored === "A" ? state.aName : favored === "B" ? state.bName : "nobody";
-    $("rulesChips").innerHTML = `
-      <span class="chip"><strong>Prior:</strong> ${Math.round(state.baseLine*100)}/${Math.round((1-state.baseLine)*100)}</span>
-      <span class="chip"><strong>Liquidity:</strong> ${state.liquidity}</span>
-      <span class="chip"><strong>Spread:</strong> ${spreadPts}pts</span>
-      <span class="chip"><strong>Favored:</strong> ${favoredName}</span>
-      <span class="chip"><strong>Penalty:</strong> ${overThreshold ? "ON" : "OFF"}</span>
-    `;
+    // penalty banner preview
+    const {fav, favProb} = favoriteInfo(pA);
+    const spreadPts = Math.round(Math.abs(pA - pB) * 100);
+    const edgePts = favoriteEdgePoints(favProb);
+    const triggers = penaltyTriggers(favProb);
 
-    // penalty banner
     const banner = $("penaltyBanner");
     const title = $("penaltyTitle");
     const text  = $("penaltyText");
 
-    if(!favored){
+    const favName = fav === "A" ? state.aName : fav === "B" ? state.bName : "nobody";
+    const extraIfFavLoses = edgePts * state.dollarsPerPoint;
+
+    if(!fav){
       banner.className = "banner";
-      title.textContent = "Penalty: none";
-      text.textContent = "Odds are even — pure chaos.";
-    } else if(!overThreshold){
+      title.textContent = "Favorite-loss penalty: none";
+      text.textContent = "No favorite — no extra penalty (just dinner).";
+    } else if(!triggers){
       banner.className = "banner warn";
-      title.textContent = "Penalty: none (for now)";
-      text.textContent = \
-      \
-      `${favoredName} is favored, but spread is under ${Math.round(state.threshold*100)}pts.`;
+      title.textContent = "Favorite-loss penalty: armed (but not triggered yet)";
+      text.textContent = `${favName} is favored, spread ${spreadPts}pts < threshold ${state.thresholdPts}pts. If it widens and favorite loses, extra applies.`;
     } else {
       banner.className = "banner bad";
-      title.textContent = \
-      \
-      `Penalty: +${state.penaltySize} ${penaltyLabel()} to the favorite`;
-      text.textContent = \
-      \
-      `${favoredName} is favored by ${spreadPts}pts. If the favorite wins, the penalty applies.`;
+      title.textContent = "Favorite-loss penalty: LIVE if favorite loses";
+      text.textContent = `${favName} is favored (edge ${edgePts}pts). If ${favName} loses, loser pays base $${state.dinnerCost} + $${extraIfFavLoses} extra.`;
     }
+
+    $("rulesChips").innerHTML = `
+      <span class="chip"><strong>Prior:</strong> ${Math.round(state.baseLine*100)}/${Math.round((1-state.baseLine)*100)}</span>
+      <span class="chip"><strong>Liquidity:</strong> ${state.liquidity}</span>
+      <span class="chip"><strong>Threshold:</strong> ${state.thresholdPts}pt spread</span>
+      <span class="chip"><strong>$ / edge pt:</strong> $${state.dollarsPerPoint}</span>
+      <span class="chip"><strong>Dinner:</strong> $${state.dinnerCost}</span>
+    `;
 
     renderBettorSelect();
     renderWinnerSelect();
     renderRosterTable();
   }
 
-  // Ensure matchStart initial parse when user types manually
   document.addEventListener("DOMContentLoaded", init);
 </script>
 </body>
