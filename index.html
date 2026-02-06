@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Golfshi — Dinner Odds (Points)</title>
+  <title>Golfshi — Dinner Odds</title>
   <style>
     :root{
-      --bg:#0b1020; --text:#e9eeff; --muted:#a8b3d6; --line:rgba(255,255,255,.08);
+      --bg:#0b1020; --text:#e9eeff; --muted:#a8b3d6; --line:rgba(255,255,255,.10);
       --shadow:0 12px 30px rgba(0,0,0,.35); --radius:18px;
       --good:#38d996; --warn:#ffcc66; --bad:#ff6b6b;
     }
@@ -21,21 +21,12 @@
       color:var(--text);
       min-height:100vh;
     }
-    header{padding:24px 18px 10px; max-width:1200px; margin:0 auto;}
-    .topbar{display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
-    .brand{display:flex; gap:12px; align-items:center;}
-    .logo{
-      width:44px;height:44px;border-radius:14px;
-      background: linear-gradient(135deg, rgba(56,217,150,.85), rgba(80,140,255,.85));
-      box-shadow: var(--shadow);
-      display:grid; place-items:center; font-weight:900; color:#061025;
-    }
-    h1{margin:0; font-size:18px;}
-    .subtitle{margin:2px 0 0; color:var(--muted); font-size:13px}
-    main{max-width:1200px; margin:0 auto; padding:0 18px 28px;}
-    .grid{display:grid; gap:16px; grid-template-columns: 1.15fr .85fr;}
-    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
-
+    header{max-width:900px;margin:0 auto;padding:22px 16px 10px}
+    h1{margin:0;font-size:18px}
+    .sub{color:var(--muted);font-size:13px;margin-top:4px;line-height:1.3}
+    main{max-width:900px;margin:0 auto;padding:0 16px 28px}
+    .grid{display:grid;gap:14px;grid-template-columns:1fr .9fr}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
       border:1px solid var(--line);
@@ -43,307 +34,139 @@
       box-shadow: var(--shadow);
       overflow:hidden;
     }
-    .hd{
-      padding:16px; border-bottom:1px solid var(--line);
-      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
-      background: rgba(255,255,255,.02);
-    }
-    .hd h2{margin:0; font-size:14px;}
-    .hd .hint{margin-top:3px; color:var(--muted); font-size:12px; line-height:1.25;}
-    .bd{padding:16px;}
-
-    label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px;}
-    input[type="text"], input[type="number"], input[type="datetime-local"], select{
-      width:100%; padding:10px 12px; border-radius:12px;
-      border:1px solid var(--line);
-      background: rgba(10,16,40,.55);
-      color: var(--text);
-      outline:none;
-    }
-    .row{display:flex; gap:12px; flex-wrap:wrap;}
-    .row > *{flex:1; min-width:200px;}
-
-    .pill{
-      padding:7px 10px; border-radius:999px;
-      border:1px solid var(--line);
-      background: rgba(27,39,80,.55);
-      color: var(--muted);
-      font-size:12px;
-      white-space:nowrap;
-    }
+    .hd{padding:14px 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02);
+      display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .pill{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;
+      padding:7px 10px;background:rgba(27,39,80,.55)}
     .pill strong{color:var(--text)}
-    .chips{display:flex; gap:8px; flex-wrap:wrap}
-    .chip{
-      padding:7px 10px;border-radius:999px;
-      background: rgba(27,39,80,.65);
-      border:1px solid var(--line);
-      color: var(--muted);
-      font-size:12px;
-      display:inline-flex; gap:8px; align-items:center;
+    .bd{padding:16px}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input,button{
+      font: inherit;
     }
-    .chip strong{color:var(--text); font-weight:700}
-    .note{margin-top:10px; color:var(--muted); font-size:12px; line-height:1.35}
-
-    .market{display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px;}
-    @media(max-width:560px){ .market{grid-template-columns:1fr} }
-    .side{
-      border:1px solid var(--line);
-      background: rgba(15,23,48,.6);
-      border-radius: 16px;
-      padding:14px;
+    input[type="text"], input[type="number"], input[type="password"]{
+      width:100%;padding:12px 12px;border-radius:12px;border:1px solid var(--line);
+      background: rgba(10,16,40,.55);color:var(--text);outline:none;
     }
-    .side .name{font-weight:800; font-size:14px; margin:0 0 6px;}
-    .price{display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:0 0 10px;}
-    .price .big{font-size:30px; font-weight:900; letter-spacing:-.5px;}
-    .price .small{color:var(--muted); font-size:12px;}
-
-    .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .row>*{flex:1;min-width:180px}
+    .market{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+    @media(max-width:540px){.market{grid-template-columns:1fr}}
+    .side{border:1px solid var(--line);border-radius:16px;background:rgba(15,23,48,.6);padding:14px}
+    .name{font-weight:900;font-size:14px;margin:0 0 6px}
+    .price{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+    .big{font-size:34px;font-weight:950;letter-spacing:-.5px}
+    .small{font-size:12px;color:var(--muted)}
+    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
     button{
       border:1px solid var(--line);
       background: linear-gradient(180deg, rgba(42,60,122,.95), rgba(34,52,107,.95));
       color:var(--text);
-      padding:10px 12px;
-      border-radius: 12px;
-      cursor:pointer;
-      font-weight:800;
-      letter-spacing:.2px;
-      flex:1;
-      min-width:140px;
+      padding:12px 12px;border-radius:12px;cursor:pointer;font-weight:900;flex:1;min-width:150px;
     }
-    button.secondary{background: rgba(18,26,51,.55);}
-    button.danger{background: rgba(255,107,107,.18);}
-    button:disabled{opacity:.45; cursor:not-allowed}
-
-    .banner{
-      border-top:1px solid var(--line);
-      padding:14px 16px;
-      display:flex; align-items:flex-start; gap:12px;
-      background: rgba(0,0,0,.12);
-    }
-    .badge{
-      width:10px;height:10px;border-radius:999px;
-      margin-top:5px; background: var(--good);
-      box-shadow: 0 0 0 6px rgba(56,217,150,.08);
-    }
-    .banner.warn .badge{background:var(--warn); box-shadow:0 0 0 6px rgba(255,204,102,.10)}
-    .banner.bad  .badge{background:var(--bad);  box-shadow:0 0 0 6px rgba(255,107,107,.10)}
-    .banner h3{margin:0; font-size:13px}
-    .banner p{margin:4px 0 0; color:var(--muted); font-size:12px; line-height:1.35}
-
-    .ledger{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size:12px;
-      white-space:pre-wrap;
-      background: rgba(10,16,40,.55);
-      border:1px solid var(--line);
-      border-radius: 14px;
-      padding:12px;
-      min-height:190px;
-      color: rgba(233,238,255,.92);
-    }
-    table{
-      width:100%;
-      border-collapse:collapse;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background: rgba(10,16,40,.35);
-      overflow:hidden;
-    }
-    th, td{
-      text-align:left;
-      padding:10px 10px;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      font-size:12px;
-      color: var(--muted);
-    }
-    th{color:rgba(233,238,255,.85); font-weight:800; background: rgba(255,255,255,.03);}
-    td strong{color:rgba(233,238,255,.92)}
+    button.secondary{background:rgba(18,26,51,.55)}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .preset{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .preset button{flex:0;min-width:auto;padding:10px 12px}
+    .banner{border-top:1px solid var(--line);padding:12px 16px;background:rgba(0,0,0,.12)}
+    .banner.good{border-left:4px solid var(--good)}
+    .banner.warn{border-left:4px solid var(--warn)}
+    .banner.bad{border-left:4px solid var(--bad)}
+    .banner h3{margin:0;font-size:13px}
+    .banner p{margin:6px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
+    .log{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12px;white-space:pre-wrap;background:rgba(10,16,40,.55);border:1px solid var(--line);
+      border-radius:14px;padding:12px;min-height:160px;color:rgba(233,238,255,.92)}
   </style>
 </head>
-
 <body>
 <header>
-  <div class="topbar">
-    <div class="brand">
-      <div class="logo">G$</div>
-      <div>
-        <h1>Golfshi — Dinner Odds (Points)</h1>
-        <div class="subtitle">24 people · 100 points max · points move the line · line locks pre-match</div>
-      </div>
-    </div>
-    <div class="chips" id="headerChips"></div>
-  </div>
+  <h1>Golfshi — Dinner Odds</h1>
+  <div class="sub">Bet points to move the line. Points don’t pay out. Loser buys dinner. If the favorite loses, they pay extra based on the locked odds.</div>
 </header>
 
 <main>
   <div class="grid">
-    <!-- MARKET -->
     <section class="card">
       <div class="hd">
-        <div>
-          <h2>Market</h2>
-          <div class="hint">
-            Points are for price discovery only. The loser buys dinner.
-            If the favorite loses, the market makes them pay extra.
-          </div>
-        </div>
-        <div class="pill" id="lockPill"><strong>Status:</strong> OPEN</div>
+        <div class="pill" id="statusPill"><strong>Status:</strong> loading…</div>
+        <div class="pill" id="linePill"><strong>Line:</strong> …</div>
       </div>
-
       <div class="bd">
         <div class="row">
           <div>
-            <label>Team / Player A</label>
-            <input id="aName" type="text" value="Team A" />
+            <label>Your name</label>
+            <input id="name" type="text" placeholder="Type your name (e.g. Tom)" />
           </div>
           <div>
-            <label>Team / Player B</label>
-            <input id="bName" type="text" value="Team B" />
+            <label>PIN (shared)</label>
+            <input id="pin" type="password" placeholder="Trip PIN" />
           </div>
         </div>
 
         <div class="row" style="margin-top:10px">
           <div>
-            <label>Match start time (auto-lock)</label>
-            <input id="matchStart" type="datetime-local" />
-            <div class="note">At match start, betting locks and the line freezes.</div>
+            <div class="pill"><strong>Remaining:</strong> <span id="remaining">—</span> / <span id="maxPts">—</span> pts</div>
           </div>
           <div>
-            <label>Manual lock / reset</label>
-            <div class="row" style="margin:0">
-              <button id="lockBtn" class="danger" onclick="toggleLock()">Lock now</button>
-              <button class="secondary" onclick="resetAll()">Reset all</button>
+            <label>Bet points</label>
+            <input id="points" type="number" min="1" value="10" />
+            <div class="preset">
+              <button class="secondary" onclick="setPts(5)">5</button>
+              <button class="secondary" onclick="setPts(10)">10</button>
+              <button class="secondary" onclick="setPts(20)">20</button>
+              <button class="secondary" onclick="setPts(50)">50</button>
+              <button class="secondary" onclick="setPts(100)">100</button>
             </div>
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div>
-            <label>Line smoothing (liquidity)</label>
-            <input id="liquidity" type="number" min="1" max="500" value="60" />
-            <div class="note">Higher = line moves less from bets.</div>
-          </div>
-          <div>
-            <label>Each person max points</label>
-            <input id="maxPts" type="number" min="10" max="500" value="100" />
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div>
-            <label>Base starting line (prior)</label>
-            <select id="baseLine">
-              <option value="0.50">50 / 50</option>
-              <option value="0.55" selected>55 / 45</option>
-              <option value="0.60">60 / 40</option>
-              <option value="0.65">65 / 35</option>
-            </select>
-          </div>
-          <div>
-            <label>Penalty trigger spread (percentage points)</label>
-            <input id="thresholdPts" type="number" min="5" max="50" value="20" />
-            <div class="note">Example: 20 means 60/40 or worse triggers “favorite loss” penalty.</div>
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div>
-            <label>Dollars per “favorite edge” point</label>
-            <input id="dollarsPerPoint" type="number" min="1" max="50" value="2" />
-            <div class="note">If the favorite was 72%, edge = 22 points → extra = 22 × this.</div>
-          </div>
-          <div>
-            <label>Base dinner cost ($)</label>
-            <input id="dinnerCost" type="number" min="0" max="5000" value="300" />
-            <div class="note">Used only at settlement to compute total owed.</div>
           </div>
         </div>
 
         <div class="market">
           <div class="side">
-            <div class="name" id="sideAName">Team A</div>
+            <div class="name" id="teamA">Team A</div>
             <div class="price">
-              <div class="big" id="priceA">50¢</div>
-              <div class="small">Implied win prob</div>
+              <div class="big" id="pA">—</div>
+              <div class="small">implied</div>
             </div>
-            <div class="chips">
-              <span class="chip"><strong id="ptsA">0</strong> pts on A</span>
-              <span class="chip"><strong id="mlA">-100</strong> moneyline*</span>
+            <div class="small" id="ptsA">— pts on A</div>
+            <div class="btns">
+              <button id="betA" onclick="bet('A')">Bet on A</button>
             </div>
           </div>
 
           <div class="side">
-            <div class="name" id="sideBName">Team B</div>
+            <div class="name" id="teamB">Team B</div>
             <div class="price">
-              <div class="big" id="priceB">50¢</div>
-              <div class="small">Implied win prob</div>
+              <div class="big" id="pB">—</div>
+              <div class="small">implied</div>
             </div>
-            <div class="chips">
-              <span class="chip"><strong id="ptsB">0</strong> pts on B</span>
-              <span class="chip"><strong id="mlB">+100</strong> moneyline*</span>
+            <div class="small" id="ptsB">— pts on B</div>
+            <div class="btns">
+              <button id="betB" class="secondary" onclick="bet('B')">Bet on B</button>
             </div>
           </div>
         </div>
-
-        <div class="row" style="margin-top:12px">
-          <div>
-            <label>Who is betting?</label>
-            <select id="bettor"></select>
-          </div>
-          <div>
-            <label>Bet points</label>
-            <input id="betPts" type="number" min="1" max="100" value="10" />
-          </div>
-        </div>
-
-        <div class="btns">
-          <button id="betA" onclick="placeBet('A')">Bet points on A</button>
-          <button id="betB" class="secondary" onclick="placeBet('B')">Bet points on B</button>
-        </div>
-
-        <div class="note">*Moneyline is a goofy conversion of implied probability. This is a joke site.</div>
       </div>
 
       <div class="banner" id="penaltyBanner">
-        <div class="badge"></div>
-        <div>
-          <h3 id="penaltyTitle">Favorite-loss penalty: ready</h3>
-          <p id="penaltyText">If the favorite loses AND spread ≥ threshold, extra dollars apply.</p>
-        </div>
+        <h3 id="penTitle">Penalty meter</h3>
+        <p id="penText">…</p>
       </div>
     </section>
 
-    <!-- RIGHT COLUMN -->
     <aside class="card">
       <div class="hd">
-        <div>
-          <h2>Roster + Settle</h2>
-          <div class="hint">Everyone starts with max points. Points just move odds; settlement tells loser’s bill.</div>
-        </div>
-        <button class="secondary" onclick="clearLedger()">Clear log</button>
+        <div class="pill"><strong>Admin:</strong> lock / unlock</div>
+        <button class="secondary" onclick="refresh()">Refresh</button>
       </div>
-
       <div class="bd">
-        <div class="chips" id="rulesChips" style="margin-bottom:10px"></div>
-
-        <div class="row" style="margin-bottom:10px">
-          <div>
-            <label>Settle winner</label>
-            <select id="winnerSelect"></select>
-          </div>
-          <div style="display:flex; align-items:flex-end">
-            <button onclick="settle()">Settle</button>
-          </div>
+        <div class="row">
+          <button class="danger" id="lockBtn" onclick="setLock(true)">Lock</button>
+          <button class="secondary" id="unlockBtn" onclick="setLock(false)">Unlock</button>
         </div>
-
-        <label>Roster (click a name to edit)</label>
-        <div style="margin-top:10px; max-height:280px; overflow:auto; border-radius:14px;">
-          <table id="rosterTable"></table>
-        </div>
-
         <div style="margin-top:12px">
-          <label>Event log</label>
-          <div class="ledger" id="ledger"></div>
+          <label>Log</label>
+          <div class="log" id="log"></div>
         </div>
       </div>
     </aside>
@@ -351,337 +174,144 @@
 </main>
 
 <script>
+  // 1) PUT YOUR APPS SCRIPT WEB APP URL HERE (ends with /exec)
+  const SCRIPT_URL = "PASTE_YOUR_SCRIPT_URL_HERE";
+
   const $ = (id) => document.getElementById(id);
 
-  const state = {
-    locked: false,
-    aName: "Team A",
-    bName: "Team B",
-    maxPts: 100,
-    liquidity: 60,
-    baseLine: 0.55,           // prior pA
-    thresholdPts: 20,         // spread in percentage points (e.g., 20 means 60/40)
-    dollarsPerPoint: 2,       // $ per favorite edge point
-    dinnerCost: 300,          // base dinner cost
-    matchStart: null,         // Date
-    people: [],               // {id, name, balance, betA, betB}
-  };
+  let lastState = null;
 
-  function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
-  function fmtCents(p){ return Math.round(p*100) + "¢"; }
+  function log(s){
+    const ts = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    $("log").textContent = `[${ts}] ${s}\n` + $("log").textContent;
+  }
 
-  function impliedToMoneyline(p){
-    p = clamp(p, 0.0001, 0.9999);
+  function setPts(n){ $("points").value = n; }
+
+  async function apiGetState(){
+    const url = `${SCRIPT_URL}?action=state&ts=${Date.now()}`;
+    const r = await fetch(url);
+    return r.json();
+  }
+
+  async function apiPost(payload){
+    const r = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    });
+    return r.json();
+  }
+
+  function moneyline(p){
+    p = Math.min(0.9999, Math.max(0.0001, p));
     const ml = (p > 0.5) ? - (p/(1-p))*100 : ((1-p)/p)*100;
     const r = Math.round(ml);
     return (r > 0 ? "+"+r : ""+r);
   }
 
-  function nowLocalISOForDatetimeLocal(d){
-    const pad = (x)=> String(x).padStart(2,"0");
-    const yyyy = d.getFullYear();
-    const mm = pad(d.getMonth()+1);
-    const dd = pad(d.getDate());
-    const hh = pad(d.getHours());
-    const mi = pad(d.getMinutes());
-    return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
-  }
-
-  function escapeHtml(s){
-    return String(s)
-      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-  }
-
-  function init(){
-    // default match start: now + 2 hours
-    const d = new Date(Date.now() + 2*60*60*1000);
-    $("matchStart").value = nowLocalISOForDatetimeLocal(d);
-    state.matchStart = new Date($("matchStart").value);
-
-    // create 24 people
-    state.people = Array.from({length:24}, (_,i)=>({
-      id: i+1,
-      name: `Bettor ${i+1}`,
-      balance: state.maxPts,
-      betA: 0,
-      betB: 0
-    }));
-
-    // wire inputs
-    $("aName").addEventListener("input", e => { state.aName = e.target.value || "Team A"; updateUI(); });
-    $("bName").addEventListener("input", e => { state.bName = e.target.value || "Team B"; updateUI(); });
-
-    $("liquidity").addEventListener("input", e => { state.liquidity = clamp(Number(e.target.value)||60, 1, 500); updateUI(); });
-    $("maxPts").addEventListener("input", e => { state.maxPts = clamp(Number(e.target.value)||100, 10, 500); resetBalancesToMax(); updateUI(); });
-    $("baseLine").addEventListener("change", e => { state.baseLine = Number(e.target.value); updateUI(); });
-
-    $("thresholdPts").addEventListener("input", e => { state.thresholdPts = clamp(Number(e.target.value)||20, 5, 50); updateUI(); });
-    $("dollarsPerPoint").addEventListener("input", e => { state.dollarsPerPoint = clamp(Number(e.target.value)||2, 1, 50); updateUI(); });
-    $("dinnerCost").addEventListener("input", e => { state.dinnerCost = clamp(Number(e.target.value)||0, 0, 5000); updateUI(); });
-
-    $("matchStart").addEventListener("change", e => {
-      state.matchStart = e.target.value ? new Date(e.target.value) : null;
-      updateUI();
-    });
-
-    clearLedger();
-    log("Market initialized. 24 bettors loaded. Everyone starts with max points.");
-    updateUI();
-    setInterval(tickLockTimer, 500);
-  }
-
-  function tickLockTimer(){
-    if(state.locked) return;
-    if(!state.matchStart) return;
-    if(new Date() >= state.matchStart){
-      state.locked = true;
-      log("AUTO-LOCK: Match start reached. Market is now LOCKED.");
-      updateUI();
+  async function refresh(){
+    try{
+      const st = await apiGetState();
+      if(!st.ok) throw new Error(st.error || "bad state");
+      lastState = st;
+      render(st);
+    }catch(err){
+      log("ERROR loading state: " + err.message);
     }
   }
 
-  function toggleLock(){
-    state.locked = !state.locked;
-    log(state.locked ? "MANUAL LOCK: Market locked." : "MANUAL UNLOCK: Market reopened.");
-    updateUI();
-  }
+  function render(st){
+    const locked = st.locked;
+    const cfg = st.config;
+    const t = st.totals;
+    const o = st.odds;
 
-  function resetBalancesToMax(){
-    state.people.forEach(p=>{
-      p.balance = state.maxPts - (p.betA + p.betB);
-      if(p.balance < 0) p.balance = 0;
-    });
-  }
+    $("statusPill").innerHTML = `<strong>Status:</strong> ${locked ? "LOCKED" : "OPEN"}`;
+    $("linePill").innerHTML = `<strong>Line:</strong> ${Math.round(o.pA*100)}/${Math.round(o.pB*100)} (ML ${moneyline(o.pA)} / ${moneyline(o.pB)})`;
 
-  function resetAll(){
-    state.locked = false;
-    state.people.forEach(p=>{ p.betA=0; p.betB=0; p.balance=state.maxPts; });
-    clearLedger();
-    log("RESET: All bets cleared, balances restored, market OPEN.");
-    updateUI();
-  }
+    $("maxPts").textContent = cfg.MAX_POINTS;
 
-  function totals(){
-    const ptsA = state.people.reduce((s,p)=>s+p.betA,0);
-    const ptsB = state.people.reduce((s,p)=>s+p.betB,0);
-    return {ptsA, ptsB, total: ptsA+ptsB};
-  }
+    $("pA").textContent = Math.round(o.pA*100) + "%";
+    $("pB").textContent = Math.round(o.pB*100) + "%";
+    $("ptsA").textContent = `${t.ptsA} pts on A`;
+    $("ptsB").textContent = `${t.ptsB} pts on B`;
 
-  function impliedPA(){
-    // Prior + liquidity "virtual points"
-    const {ptsA, ptsB} = totals();
-    const L = state.liquidity;
-    const vA = L * state.baseLine;
-    const vB = L * (1 - state.baseLine);
-    const denom = (ptsA + vA) + (ptsB + vB);
-    if(denom <= 0) return 0.5;
-    return (ptsA + vA) / denom;
-  }
+    $("betA").disabled = locked;
+    $("betB").disabled = locked;
 
-  function favoriteInfo(pA){
-    const pB = 1 - pA;
-    if(pA === pB) return {fav:null, favProb:0.5, dogProb:0.5};
-    if(pA > pB) return {fav:"A", favProb:pA, dogProb:pB};
-    return {fav:"B", favProb:pB, dogProb:pA};
-  }
-
-  function favoriteEdgePoints(favProb){
-    // edge over 50%, in percentage points, rounded
-    return Math.max(0, Math.round((favProb - 0.50) * 100));
-  }
-
-  function penaltyTriggers(favProb){
-    // trigger based on spread between fav and dog, i.e. 2*edge
-    // spreadPts = round(|pA - pB|*100) = round(2*edge)
-    const spreadPts = Math.round(Math.abs(favProb - (1 - favProb)) * 100);
-    return spreadPts >= state.thresholdPts;
-  }
-
-  function log(line){
-    const el = $("ledger");
-    const ts = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-    el.textContent = `[${ts}] ${line}\n` + el.textContent;
-  }
-  function clearLedger(){ $("ledger").textContent = ""; }
-
-  function renderBettorSelect(){
-    $("bettor").innerHTML = state.people.map(p=>(
-      `<option value="${p.id}">${escapeHtml(p.name)} (bal ${p.balance})</option>`
-    )).join("");
-  }
-
-  function renderWinnerSelect(){
-    $("winnerSelect").innerHTML = `
-      <option value="A">${escapeHtml(state.aName)} wins</option>
-      <option value="B">${escapeHtml(state.bName)} wins</option>
-    `;
-  }
-
-  function renderRosterTable(){
-    const rows = state.people.map(p => `
-      <tr>
-        <td><strong contenteditable="true" data-edit="${p.id}" spellcheck="false">${escapeHtml(p.name)}</strong></td>
-        <td>${p.balance}</td>
-        <td>${p.betA}</td>
-        <td>${p.betB}</td>
-      </tr>
-    `).join("");
-
-    $("rosterTable").innerHTML = `
-      <thead>
-        <tr><th>Name</th><th>Balance</th><th>Bet on A</th><th>Bet on B</th></tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    `;
-
-    $("rosterTable").querySelectorAll('[data-edit]').forEach(el=>{
-      el.addEventListener('blur', (e)=>{
-        const id = Number(e.target.getAttribute('data-edit'));
-        const person = state.people.find(x=>x.id===id);
-        const txt = (e.target.textContent || "").trim();
-        person.name = txt || `Bettor ${id}`;
-        updateUI();
-      });
-      el.addEventListener('keydown', (e)=>{
-        if(e.key === "Enter"){ e.preventDefault(); e.target.blur(); }
-      });
-    });
-  }
-
-  function placeBet(side){
-    if(state.locked){ log("REJECTED: Market is LOCKED. No more bets."); return; }
-
-    const bettorId = Number($("bettor").value);
-    const pts = clamp(Number($("betPts").value)||0, 1, state.maxPts);
-    const person = state.people.find(p=>p.id===bettorId);
-    if(!person) return;
-
-    if(pts > person.balance){
-      log(`REJECTED: ${person.name} only has ${person.balance} points left.`);
-      return;
-    }
-
-    person.balance -= pts;
-    if(side === "A") person.betA += pts;
-    if(side === "B") person.betB += pts;
-
-    log(`BET: ${person.name} puts ${pts} pts on ${(side==="A")?state.aName:state.bName}.`);
-    updateUI();
-  }
-
-  function settle(){
-    const winner = $("winnerSelect").value; // 'A' or 'B'
-    const loser = (winner === "A") ? "B" : "A";
-    const winnerName = (winner === "A") ? state.aName : state.bName;
-    const loserName  = (loser === "A") ? state.aName : state.bName;
-
-    const pA = impliedPA();
-    const {fav, favProb, dogProb} = favoriteInfo(pA);
-
-    // compute final spread and penalty params
-    const spreadPts = Math.round(Math.abs(pA - (1-pA)) * 100);
-    const edgePts = favoriteEdgePoints(favProb);
-    const triggers = penaltyTriggers(favProb);
-
-    log(`LOCKED LINE: ${state.aName} ${Math.round(pA*100)}% / ${state.bName} ${Math.round((1-pA)*100)}%`);
-    log(`RESULT: ${winnerName} wins. ${loserName} loses.`);
-
-    // base dinner
-    const base = state.dinnerCost;
-
-    // favorite-loss penalty: applies ONLY if the favorite loses AND spread >= threshold
-    let extra = 0;
-    let reason = "No favorite-loss penalty.";
-    if(fav && loser === fav && triggers){
-      extra = edgePts * state.dollarsPerPoint;
-      reason = `Favorite-loss penalty: favorite edge ${edgePts}pts × $${state.dollarsPerPoint}/pt = $${extra}.`;
-    } else if(fav && loser === fav && !triggers){
-      reason = `Favorite lost but spread ${spreadPts}pts < threshold ${state.thresholdPts}pts → no extra.`;
-    } else if(fav && loser !== fav){
-      reason = "Underdog lost (expected). No extra.";
-    } else {
-      reason = "No clear favorite. No extra.";
-    }
-
-    const totalOwed = base + extra;
-
-    log(`DINNER: Loser (${loserName}) pays base dinner $${base}.`);
-    log(reason);
-    log(`TOTAL OWED BY LOSER: $${totalOwed}.`);
-    log("—");
-  }
-
-  function updateUI(){
-    $("sideAName").textContent = state.aName;
-    $("sideBName").textContent = state.bName;
-
-    const {ptsA, ptsB, total} = totals();
-    const pA = impliedPA();
-    const pB = 1 - pA;
-
-    $("priceA").textContent = fmtCents(pA);
-    $("priceB").textContent = fmtCents(pB);
-    $("ptsA").textContent = ptsA;
-    $("ptsB").textContent = ptsB;
-    $("mlA").textContent = impliedToMoneyline(pA);
-    $("mlB").textContent = impliedToMoneyline(pB);
-
-    $("lockPill").innerHTML = `<strong>Status:</strong> ${state.locked ? "LOCKED" : "OPEN"}`;
-    $("lockPill").style.borderColor = state.locked ? "rgba(255,107,107,.35)" : "rgba(56,217,150,.25)";
-    $("lockBtn").textContent = state.locked ? "Unlock" : "Lock now";
-    $("betA").disabled = state.locked;
-    $("betB").disabled = state.locked;
-
-    const ms = state.matchStart ? state.matchStart.toLocaleString() : "not set";
-    $("headerChips").innerHTML = `
-      <span class="chip"><strong>24 bettors</strong> · ${state.maxPts} pts each</span>
-      <span class="chip"><strong>Total in:</strong> ${total} pts</span>
-      <span class="chip"><strong>Line:</strong> ${Math.round(pA*100)}/${Math.round(pB*100)}</span>
-      <span class="chip"><strong>Locks:</strong> ${escapeHtml(ms)}</span>
-    `;
-
-    // penalty banner preview
-    const {fav, favProb} = favoriteInfo(pA);
-    const spreadPts = Math.round(Math.abs(pA - pB) * 100);
-    const edgePts = favoriteEdgePoints(favProb);
-    const triggers = penaltyTriggers(favProb);
-
+    // Penalty preview (if favorite loses)
+    const favName = o.fav === "A" ? "Team A" : o.fav === "B" ? "Team B" : "No favorite";
     const banner = $("penaltyBanner");
-    const title = $("penaltyTitle");
-    const text  = $("penaltyText");
 
-    const favName = fav === "A" ? state.aName : fav === "B" ? state.bName : "nobody";
-    const extraIfFavLoses = edgePts * state.dollarsPerPoint;
-
-    if(!fav){
-      banner.className = "banner";
-      title.textContent = "Favorite-loss penalty: none";
-      text.textContent = "No favorite — no extra penalty (just dinner).";
-    } else if(!triggers){
+    if(!o.fav){
+      banner.className = "banner good";
+      $("penTitle").textContent = "Penalty meter: neutral";
+      $("penText").textContent = "No clear favorite → loser just pays dinner (no extra).";
+    } else if(!o.triggers){
       banner.className = "banner warn";
-      title.textContent = "Favorite-loss penalty: armed (but not triggered yet)";
-      text.textContent = `${favName} is favored, spread ${spreadPts}pts < threshold ${state.thresholdPts}pts. If it widens and favorite loses, extra applies.`;
+      $("penTitle").textContent = "Penalty meter: armed (not triggered)";
+      $("penText").textContent = `${favName} favored, spread ${o.spreadPts}pts < threshold. If it widens AND favorite loses, extra applies.`;
     } else {
       banner.className = "banner bad";
-      title.textContent = "Favorite-loss penalty: LIVE if favorite loses";
-      text.textContent = `${favName} is favored (edge ${edgePts}pts). If ${favName} loses, loser pays base $${state.dinnerCost} + $${extraIfFavLoses} extra.`;
+      $("penTitle").textContent = "Penalty meter: LIVE (if favorite loses)";
+      $("penText").textContent = `${favName} edge ${o.edgePts}pts → extra if favorite loses: $${o.extraIfFavLoses}. Dinner base: $${cfg.DINNER_COST}.`;
     }
 
-    $("rulesChips").innerHTML = `
-      <span class="chip"><strong>Prior:</strong> ${Math.round(state.baseLine*100)}/${Math.round((1-state.baseLine)*100)}</span>
-      <span class="chip"><strong>Liquidity:</strong> ${state.liquidity}</span>
-      <span class="chip"><strong>Threshold:</strong> ${state.thresholdPts}pt spread</span>
-      <span class="chip"><strong>$ / edge pt:</strong> $${state.dollarsPerPoint}</span>
-      <span class="chip"><strong>Dinner:</strong> $${state.dinnerCost}</span>
-    `;
-
-    renderBettorSelect();
-    renderWinnerSelect();
-    renderRosterTable();
+    // Remaining points estimate (we can’t compute per-user remaining from state alone without another endpoint),
+    // so show a friendly hint instead:
+    $("remaining").textContent = "checked at bet time";
   }
 
-  document.addEventListener("DOMContentLoaded", init);
+  async function bet(side){
+    const name = $("name").value.trim();
+    const pin = $("pin").value.trim();
+    const points = Number($("points").value);
+
+    if(!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR_SCRIPT_URL_HERE")){
+      alert("Set SCRIPT_URL in the HTML to your Apps Script /exec URL.");
+      return;
+    }
+    if(!name){ alert("Enter your name."); return; }
+    if(!pin){ alert("Enter the PIN."); return; }
+    if(!Number.isFinite(points) || points <= 0){ alert("Enter points > 0."); return; }
+
+    try{
+      const res = await apiPost({ action:"bet", name, side, points, pin });
+      if(!res.ok){
+        alert(res.error || "Bet rejected");
+        log(`BET REJECTED for ${name}: ${res.error || "unknown"}`);
+        return;
+      }
+      log(`${name} bet ${points} on ${side}.`);
+      render(res.state);
+    }catch(err){
+      alert("Error placing bet: " + err.message);
+      log("ERROR placing bet: " + err.message);
+    }
+  }
+
+  async function setLock(locked){
+    const pin = $("pin").value.trim();
+    if(!pin){ alert("Enter the PIN."); return; }
+    try{
+      const res = await apiPost({ action:"lock", locked, pin });
+      if(!res.ok){
+        alert(res.error || "Lock failed");
+        log(`LOCK FAILED: ${res.error || "unknown"}`);
+        return;
+      }
+      log(locked ? "Market locked." : "Market unlocked.");
+      render(res.state);
+    }catch(err){
+      alert("Error locking: " + err.message);
+      log("ERROR locking: " + err.message);
+    }
+  }
+
+  // auto-refresh every 5s so phones see updates
+  refresh();
+  setInterval(refresh, 5000);
 </script>
 </body>
 </html>
