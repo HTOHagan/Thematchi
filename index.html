@@ -58,7 +58,7 @@
     .market{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
     @media(max-width:540px){.market{grid-template-columns:1fr}}
     .side{border:1px solid var(--line);border-radius:16px;background:rgba(15,23,48,.6);padding:14px}
-    .{font-weight:950;font-size:14px;margin:0 0 6px}
+    .name{font-weight:950;font-size:14px;margin:0 0 6px}
     .price{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
     .big{font-size:34px;font-weight:980;letter-spacing:-.5px}
     .small{font-size:12px;color:var(--muted)}
@@ -70,9 +70,6 @@
     .banner.bad{border-left:4px solid var(--bad)}
     .banner h3{margin:0;font-size:13px}
     .banner p{margin:6px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
-    .log{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size:12px;white-space:pre-wrap;background:rgba(10,16,40,.55);border:1px solid var(--line);
-      border-radius:14px;padding:12px;min-height:140px;color:rgba(233,238,255,.92)}
     .hidden{display:none!important}
   </style>
 </head>
@@ -83,83 +80,71 @@
 </header>
 
 <main>
-<section class="card" id="authCard">
-  <div class="hd">
-    <div class="pill"><strong>Step 1:</strong> Sign in</div>
-    <div class="pill" id="authPill"><strong>Status:</strong> not logged in</div>
-  </div>
-
-  <div class="bd">
-    <div class="row" style="align-items:center">
-      <div style="flex:2; min-width:260px">
-        <label style="margin-bottom:10px">Choose:</label>
-
-        <div style="display:flex; gap:14px; flex-wrap:wrap">
-          <label style="display:flex; align-items:center; gap:10px; cursor:pointer">
-            <input type="radio" name="authMode" value="new" checked onchange="setAuthMode(this.value)">
-            <span style="font-weight:900">New user</span>
-          </label>
-
-          <label style="display:flex; align-items:center; gap:10px; cursor:pointer">
-            <input type="radio" name="authMode" value="returning" onchange="setAuthMode(this.value)">
-            <span style="font-weight:900">Returning user</span>
-          </label>
-        </div>
-      </div>
-
-      <div style="flex:1; min-width:220px; text-align:right">
-        <button class="secondary" onclick="clearSaved()">Clear saved login</button>
-      </div>
+  <!-- AUTH -->
+  <section class="card" id="authCard">
+    <div class="hd">
+      <div class="pill"><strong>Step 1:</strong> Choose new or returning</div>
+      <div class="pill" id="authPill"><strong>Status:</strong> not logged in</div>
     </div>
 
-    <!-- NEW USER FORM -->
-    <div id="newUserForm" style="margin-top:14px">
-      <div class="row">
-        <div>
-          <label>Create your name</label>
-          <input id="nameNew" type="text" placeholder="Enter your name" autocomplete="name" />
+    <div class="bd">
+      <!-- Mode selector (radio buttons) -->
+      <div class="row" style="align-items:center">
+        <div style="flex:2; min-width:260px">
+          <label style="margin-bottom:10px">I am a:</label>
+          <div style="display:flex; gap:14px; flex-wrap:wrap">
+            <label style="display:flex; align-items:center; gap:10px; cursor:pointer">
+              <input type="radio" name="authMode" value="new" checked onchange="setAuthMode(this.value)">
+              <span style="font-weight:900">New user</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:10px; cursor:pointer">
+              <input type="radio" name="authMode" value="returning" onchange="setAuthMode(this.value)">
+              <span style="font-weight:900">Returning user</span>
+            </label>
+          </div>
         </div>
-        <div>
-          <label>Create a PIN (4+ chars)</label>
-          <input id="pinNew" type="password" placeholder="Enter PIN" autocomplete="new-password" />
+
+        <div style="flex:1; min-width:220px; text-align:right">
+          <button class="secondary" onclick="clearSaved()">Clear saved login</button>
         </div>
       </div>
 
-      <div class="row" style="margin-top:12px">
-        <button onclick="registerFromNew()">Create PIN</button>
+      <!-- NEW USER SCREEN -->
+      <div id="newUserPanel" style="margin-top:14px">
+        <div class="row">
+          <div>
+            <label>Create your name</label>
+            <input id="newName" type="text" placeholder="Enter your name" autocomplete="name" />
+          </div>
+          <div>
+            <label>Create a PIN (4+ chars)</label>
+            <input id="newPin" type="password" placeholder="Enter PIN" autocomplete="new-password" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button onclick="registerNewUser()">Create account</button>
+        </div>
       </div>
-      <div class="small" style="margin-top:10px;color:var(--muted)">
-        If your name is already taken, switch to “Returning user” and log in.
+
+      <!-- RETURNING USER SCREEN -->
+      <div id="returningUserPanel" class="hidden" style="margin-top:14px">
+        <div class="row">
+          <div>
+            <label>Your name</label>
+            <input id="returnName" type="text" placeholder="Enter your name" autocomplete="name" />
+          </div>
+          <div>
+            <label>Your PIN</label>
+            <input id="returnPin" type="password" placeholder="Enter PIN" autocomplete="current-password" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button onclick="loginReturningUser()">Login</button>
+        </div>
       </div>
+
     </div>
-
-    <!-- RETURNING USER FORM -->
-    <div id="returningUserForm" class="hidden" style="margin-top:14px">
-      <div class="row">
-        <div>
-          <label>Your name</label>
-          <input id="nameReturn" type="text" placeholder="Enter your name" autocomplete="name" />
-        </div>
-        <div>
-          <label>Your PIN</label>
-          <input id="pinReturn" type="password" placeholder="Enter PIN" autocomplete="current-password" />
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:12px">
-        <button onclick="loginFromReturning()">Login</button>
-      </div>
-      <div class="small" style="margin-top:10px;color:var(--muted)">
-        Forgot your PIN? Ask the “commissioner” to delete your row in the Users sheet.
-      </div>
-    </div>
-
-    <div style="margin-top:12px">
-      <label>Log</label>
-      <div class="log" id="log"></div>
-    </div>
-  </div>
-</section>
+  </section>
 
   <!-- BETTING -->
   <section class="card hidden" id="betCard">
@@ -224,16 +209,11 @@
 </main>
 
 <script>
-  // ✅ Your new deployment URL
+  // Your deployment URL
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzpqVGmZXp5FKwwleLFZ6uXwJJmddcPz9DKkKBD-yRl-Xpx1ySfwblQiqpxETzIk6OYCw/exec";
   const $ = (id) => document.getElementById(id);
 
   let session = { name:"", pin:"" };
-
-  function log(s){
-    const ts = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-    $("log").textContent = `[${ts}] ${s}\n` + $("log").textContent;
-  }
 
   function setPts(n){ $("points").value = n; }
 
@@ -255,7 +235,7 @@
     return r.json();
   }
 
-  // ✅ Form-encoded POST (avoids Apps Script CORS preflight issues)
+  // Form-encoded POST (avoids Apps Script CORS preflight issues)
   async function apiPost(payload){
     const form = new URLSearchParams();
     for (const [k, v] of Object.entries(payload)) form.append(k, String(v));
@@ -286,50 +266,102 @@
     localStorage.setItem("golfshi_name", session.name);
     localStorage.setItem("golfshi_pin", session.pin);
   }
+
   function loadSession(){
     const n = localStorage.getItem("golfshi_name") || "";
     const p = localStorage.getItem("golfshi_pin") || "";
     if(n && p){
       session = { name:n, pin:p };
-      $("name").value = n;
-      $("pin").value = p;
     }
   }
+
   function clearSession(){
     localStorage.removeItem("golfshi_name");
     localStorage.removeItem("golfshi_pin");
     session = { name:"", pin:"" };
   }
 
-  async function register(){
-    const name = $("name").value.trim();
-    const pin  = $("pin").value.trim();
-    if(!name){ alert("Enter your name."); return; }
-    if(!pin || pin.length < 4){ alert("PIN must be at least 4 characters."); return; }
+  function clearSaved(){
+    clearSession();
+    // keep them on auth screen, default to returning (so they can re-login)
+    setAuthMode("returning");
+    $("returnName").value = "";
+    $("returnPin").value = "";
+    $("newName").value = "";
+    $("newPin").value = "";
+    alert("Saved login cleared on this device.");
+  }
+
+  function setAuthMode(mode){
+    const newPanel = $("newUserPanel");
+    const returningPanel = $("returningUserPanel");
+
+    if(mode === "new"){
+      newPanel.classList.remove("hidden");
+      returningPanel.classList.add("hidden");
+      $("newName").focus();
+    } else {
+      newPanel.classList.add("hidden");
+      returningPanel.classList.remove("hidden");
+      $("returnName").focus();
+    }
+
+    // keep radio buttons in sync even when called from JS
+    const radio = document.querySelector(`input[name="authMode"][value="${mode}"]`);
+    if (radio) radio.checked = true;
+  }
+
+  async function registerNewUser(){
+    const name = $("newName").value.trim();
+    const pin  = $("newPin").value.trim();
+
+    if(!name){
+      alert("Enter your name.");
+      $("newName").focus();
+      return;
+    }
+    if(!pin || pin.length < 4){
+      alert("PIN must be at least 4 characters.");
+      $("newPin").focus();
+      return;
+    }
 
     const res = await apiPost({ action:"register", name, pin });
-    if(!res.ok){ alert(res.error || "Register failed"); log("REGISTER FAIL: " + (res.error||"")); return; }
+    if(!res.ok){
+      alert(res.error || "Register failed");
+      return;
+    }
 
     session = { name, pin };
     saveSession();
-    log("Registered and logged in.");
     showBetting();
     render(res.state);
     renderBalance(res.balance);
   }
 
-  async function login(){
-    const name = $("name").value.trim();
-    const pin  = $("pin").value.trim();
-    if(!name){ alert("Enter your name."); return; }
-    if(!pin){ alert("Enter your PIN."); return; }
+  async function loginReturningUser(){
+    const name = $("returnName").value.trim();
+    const pin  = $("returnPin").value.trim();
+
+    if(!name){
+      alert("Enter your name.");
+      $("returnName").focus();
+      return;
+    }
+    if(!pin){
+      alert("Enter your PIN.");
+      $("returnPin").focus();
+      return;
+    }
 
     const res = await apiPost({ action:"login", name, pin });
-    if(!res.ok){ alert(res.error || "Login failed"); log("LOGIN FAIL: " + (res.error||"")); return; }
+    if(!res.ok){
+      alert(res.error || "Login failed");
+      return;
+    }
 
     session = { name, pin };
     saveSession();
-    log("Logged in.");
     showBetting();
     render(res.state);
     renderBalance(res.balance);
@@ -337,20 +369,29 @@
 
   function logout(){
     clearSession();
-    $("name").value = "";
-    $("pin").value = "";
+    // reset inputs
+    $("newName").value = "";
+    $("newPin").value = "";
+    $("returnName").value = "";
+    $("returnPin").value = "";
+    setAuthMode("returning");
     showAuth();
-    log("Logged out.");
   }
 
   async function bet(side){
     const points = Number($("points").value);
-    if(!Number.isFinite(points) || points <= 0){ alert("Enter points > 0."); return; }
+    if(!Number.isFinite(points) || points <= 0){
+      alert("Enter points > 0.");
+      return;
+    }
 
     const res = await apiPost({ action:"bet", name:session.name, pin:session.pin, side, points });
-    if(!res.ok){ alert(res.error || "Bet rejected"); log("BET FAIL: " + (res.error||"")); await refresh(); return; }
+    if(!res.ok){
+      alert(res.error || "Bet rejected");
+      await refresh();
+      return;
+    }
 
-    log(`Bet ${points} on ${side}.`);
     render(res.state);
     renderBalance(res.balance);
   }
@@ -359,6 +400,7 @@
     try{
       const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
       if(st.ok) render(st);
+
       const b = await apiGet(`${SCRIPT_URL}?action=balance&name=${encodeURIComponent(session.name)}&pin=${encodeURIComponent(session.pin)}&ts=${Date.now()}`);
       if(b.ok) renderBalance(b);
     }catch(e){}
@@ -413,6 +455,10 @@
 
   // Boot: auto-login if saved
   (async function boot(){
+    // default UI
+    setAuthMode("new");
+    showAuth();
+
     loadSession();
     if(session.name && session.pin){
       const res = await apiPost({ action:"login", name:session.name, pin:session.pin });
@@ -421,10 +467,13 @@
         render(res.state);
         renderBalance(res.balance);
       } else {
+        // saved creds invalid → show returning login with name prefilled
+        setAuthMode("returning");
+        $("returnName").value = session.name || "";
+        $("returnPin").value = "";
+        clearSession();
         showAuth();
       }
-    } else {
-      showAuth();
     }
   })();
 
