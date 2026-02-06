@@ -85,32 +85,39 @@
 <main>
   <!-- AUTH -->
   <section class="card" id="authCard">
-    <div class="hd">
-      <div class="pill"><strong>Step 1:</strong>  + PIN</div>
-      <div class="pill" id="authPill"><strong>Status:</strong> not logged in</div>
-    </div>
-    <div class="bd">
-      <div class="row">
-        <div>
-          <label>Your name</label>
-          <input id="name" type="text" placeholder="Enter Name here " autocomplete="name"/>
-        </div>
-        <div>
-          <label>Your PIN (4+ chars)</label>
-          <input id="pin" type="password" placeholder="Enter Pin" autocomplete="current-password"/>
-        </div>
-      </div>
-      <div class="row" style="margin-top:12px">
-        <button onclick="register()">Create PIN (Register)</button>
-        <button class="secondary" onclick="login()">Login</button>
-      </div>
+  <div class="hd">
+    <div class="pill"><strong>Step 1:</strong> Who are you?</div>
+    <div class="pill" id="authPill"><strong>Status:</strong> not logged in</div>
+  </div>
 
-      <div style="margin-top:12px">
-        <label>Log</label>
-        <div class="log" id="log"></div>
+  <div class="bd">
+    <div class="row">
+      <button id="modeNewBtn" onclick="setMode('new')">New user</button>
+      <button id="modeReturningBtn" class="secondary" onclick="setMode('returning')">Returning user</button>
+    </div>
+
+    <div class="row" style="margin-top:12px">
+      <div>
+        <label>Your name</label>
+        <input id="name" type="text" placeholder="Tom" autocomplete="name"/>
+      </div>
+      <div>
+        <label>Your PIN (4+ chars)</label>
+        <input id="pin" type="password" placeholder="1234" autocomplete="current-password"/>
       </div>
     </div>
-  </section>
+
+    <div class="row" style="margin-top:12px">
+      <button id="primaryAuthBtn" onclick="primaryAuth()">Create PIN</button>
+      <button id="secondaryAuthBtn" class="secondary" onclick="secondaryAuth()">Login instead</button>
+    </div>
+
+    <div style="margin-top:12px">
+      <label>Log</label>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+</section>
 
   <!-- BETTING -->
   <section class="card hidden" id="betCard">
