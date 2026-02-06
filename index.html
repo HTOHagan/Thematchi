@@ -1,332 +1,280 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Golfshi — Dinner Odds</title>
-  <style>
-    :root{
-      --bg:#0b1020; --text:#e9eeff; --muted:#a8b3d6; --line:rgba(255,255,255,.10);
-      --shadow:0 12px 30px rgba(0,0,0,.35); --radius:18px;
-      --good:#38d996; --warn:#ffcc66; --bad:#ff6b6b;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background:
-        radial-gradient(1200px 700px at 20% 10%, rgba(56,217,150,.14), transparent 55%),
-        radial-gradient(900px 650px at 85% 20%, rgba(80,140,255,.14), transparent 55%),
-        var(--bg);
-      color:var(--text);
-      min-height:100vh;
-    }
-    header{max-width:900px;margin:0 auto;padding:22px 16px 10px}
-    h1{margin:0;font-size:18px}
-    .sub{color:var(--muted);font-size:13px;margin-top:4px;line-height:1.3}
-    main{max-width:900px;margin:0 auto;padding:0 16px 28px}
-    .grid{display:grid;gap:14px;grid-template-columns:1fr .9fr}
-    @media(max-width:900px){.grid{grid-template-columns:1fr}}
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .hd{padding:14px 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02);
-      display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
-    .pill{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;
-      padding:7px 10px;background:rgba(27,39,80,.55)}
-    .pill strong{color:var(--text)}
-    .bd{padding:16px}
-    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-    input,button{font:inherit}
-    input[type="text"], input[type="number"]{
-      width:100%;padding:12px 12px;border-radius:12px;border:1px solid var(--line);
-      background: rgba(10,16,40,.55);color:var(--text);outline:none;
-    }
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    .row>*{flex:1;min-width:180px}
-    .market{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
-    @media(max-width:540px){.market{grid-template-columns:1fr}}
-    .side{border:1px solid var(--line);border-radius:16px;background:rgba(15,23,48,.6);padding:14px}
-    .name{font-weight:950;font-size:14px;margin:0 0 6px}
-    .price{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-    .big{font-size:34px;font-weight:980;letter-spacing:-.5px}
-    .small{font-size:12px;color:var(--muted)}
-    .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    button{
-      border:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(42,60,122,.95), rgba(34,52,107,.95));
-      color:var(--text);
-      padding:12px 12px;border-radius:12px;cursor:pointer;font-weight:950;flex:1;min-width:150px;
-    }
-    button.secondary{background:rgba(18,26,51,.55)}
-    button:disabled{opacity:.5;cursor:not-allowed}
-    .preset{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    .preset button{flex:0;min-width:auto;padding:10px 12px}
-    .banner{border-top:1px solid var(--line);padding:12px 16px;background:rgba(0,0,0,.12)}
-    .banner.good{border-left:4px solid var(--good)}
-    .banner.warn{border-left:4px solid var(--warn)}
-    .banner.bad{border-left:4px solid var(--bad)}
-    .banner h3{margin:0;font-size:13px}
-    .banner p{margin:6px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
-    .log{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size:12px;white-space:pre-wrap;background:rgba(10,16,40,.55);border:1px solid var(--line);
-      border-radius:14px;padding:12px;min-height:160px;color:rgba(233,238,255,.92)}
-  </style>
-</head>
-<body>
-<header>
-  <h1>Golfshi — Dinner Odds</h1>
-  <div class="sub">Bet points to move the line. Points don’t pay out. Loser buys dinner. If the favorite loses, they pay extra based on the locked odds.</div>
-</header>
+/** Golfshi backend (Sheets + Apps Script Web App) — NAME + PIN
+ *  GET  ?action=state
+ *  GET  ?action=balance&name=Tom&pin=1234
+ *  POST {action:"register", name, pin}
+ *  POST {action:"login", name, pin}
+ *  POST {action:"bet", name, pin, side:"A"|"B", points:int}
+ *  POST {action:"lock", locked:true|false}           // (admin optional; still open unless you later restrict)
+ */
 
-<main>
-  <div class="grid">
-    <section class="card">
-      <div class="hd">
-        <div class="pill" id="statusPill"><strong>Status:</strong> loading…</div>
-        <div class="pill" id="linePill"><strong>Line:</strong> …</div>
-      </div>
+const SHEET_BETS = "Bets";
+const SHEET_CONFIG = "Config";
+const SHEET_USERS = "Users";
 
-      <div class="bd">
-        <div class="row">
-          <div>
-            <label>Your name</label>
-            <input id="name" type="text" placeholder="Type your name (e.g. Tom)" />
-            <div class="small" style="margin-top:8px">
-              <span class="pill"><strong>Remaining:</strong> <span id="remaining">—</span> / <span id="maxPts">—</span> pts</span>
-            </div>
-          </div>
+function doGet(e) {
+  const action = (e.parameter.action || "state").toLowerCase();
+  if (action === "state") return jsonResponse(getState());
 
-          <div>
-            <label>Bet points</label>
-            <input id="points" type="number" min="1" value="10" />
-            <div class="preset">
-              <button class="secondary" onclick="setPts(5)">5</button>
-              <button class="secondary" onclick="setPts(10)">10</button>
-              <button class="secondary" onclick="setPts(20)">20</button>
-              <button class="secondary" onclick="setPts(50)">50</button>
-              <button class="secondary" onclick="setPts(100)">100</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="market">
-          <div class="side">
-            <div class="name" id="teamA">Team A</div>
-            <div class="price">
-              <div class="big" id="pA">—</div>
-              <div class="small">implied</div>
-            </div>
-            <div class="small" id="ptsA">— pts on A</div>
-            <div class="btns">
-              <button id="betA" onclick="bet('A')">Bet on A</button>
-            </div>
-          </div>
-
-          <div class="side">
-            <div class="name" id="teamB">Team B</div>
-            <div class="price">
-              <div class="big" id="pB">—</div>
-              <div class="small">implied</div>
-            </div>
-            <div class="small" id="ptsB">— pts on B</div>
-            <div class="btns">
-              <button id="betB" class="secondary" onclick="bet('B')">Bet on B</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="banner" id="penaltyBanner">
-        <h3 id="penTitle">Penalty meter</h3>
-        <p id="penText">…</p>
-      </div>
-    </section>
-
-    <aside class="card">
-      <div class="hd">
-        <div class="pill"><strong>Admin:</strong> lock/unlock (no PIN 😈)</div>
-        <button class="secondary" onclick="refreshAll()">Refresh</button>
-      </div>
-      <div class="bd">
-        <div class="row">
-          <button class="danger" id="lockBtn" onclick="setLock(true)">Lock</button>
-          <button class="secondary" id="unlockBtn" onclick="setLock(false)">Unlock</button>
-        </div>
-        <div style="margin-top:12px">
-          <label>Log</label>
-          <div class="log" id="log"></div>
-        </div>
-      </div>
-    </aside>
-  </div>
-</main>
-
-<script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxX9eMHux84z5TC6p9k9craB17En4MOVKLfy-7GGNssm0-cdr2LZyiifElmKKRePlk9BA/exec";
-  const $ = (id) => document.getElementById(id);
-
-  let lastState = null;
-  let lastBalanceName = "";
-
-  function log(s){
-    const ts = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-    $("log").textContent = `[${ts}] ${s}\n` + $("log").textContent;
+  if (action === "balance") {
+    const name = String(e.parameter.name || "").trim();
+    const pin  = String(e.parameter.pin || "").trim();
+    if (!name) return jsonResponse({ ok:false, error:"Name required" }, 400);
+    if (!pin)  return jsonResponse({ ok:false, error:"PIN required" }, 400);
+    if (!authUser(name, pin)) return jsonResponse({ ok:false, error:"Bad name/PIN" }, 403);
+    return jsonResponse(getBalance(name));
   }
 
-  function setPts(n){ $("points").value = n; }
+  return jsonResponse({ ok:false, error:"Unknown action" }, 400);
+}
 
-  function moneyline(p){
-    p = Math.min(0.9999, Math.max(0.0001, p));
-    const ml = (p > 0.5) ? - (p/(1-p))*100 : ((1-p)/p)*100;
-    const r = Math.round(ml);
-    return (r > 0 ? "+"+r : ""+r);
+function doPost(e) {
+  let body = {};
+  try { body = JSON.parse(e.postData.contents || "{}"); } catch (err) {}
+  const action = (body.action || "").toLowerCase();
+
+  if (action === "register") return jsonResponse(registerUser(body));
+  if (action === "login")    return jsonResponse(loginUser(body));
+  if (action === "bet")      return jsonResponse(placeBet(body));
+  if (action === "lock")     return jsonResponse(setLocked(body));
+
+  return jsonResponse({ ok:false, error:"Unknown action" }, 400);
+}
+
+// ---------------- Users ----------------
+
+function registerUser(body) {
+  const name = normalizeName(body.name);
+  const pin  = String(body.pin || "").trim();
+
+  if (!name) return { ok:false, error:"Name required" };
+  if (!pin)  return { ok:false, error:"PIN required" };
+  if (pin.length < 4) return { ok:false, error:"PIN must be at least 4 digits/chars" };
+
+  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_USERS);
+  if (!sh) return { ok:false, error:"Missing Users sheet" };
+
+  if (userExists(name)) {
+    return { ok:false, error:"Name already registered. Use Login." };
   }
 
-  async function apiGet(url){
-    const r = await fetch(url);
-    return r.json();
+  sh.appendRow([name, hashPin(pin), new Date()]);
+  return { ok:true, message:"Registered", state:getState(), balance:getBalance(name) };
+}
+
+function loginUser(body) {
+  const name = normalizeName(body.name);
+  const pin  = String(body.pin || "").trim();
+
+  if (!name) return { ok:false, error:"Name required" };
+  if (!pin)  return { ok:false, error:"PIN required" };
+
+  if (!authUser(name, pin)) return { ok:false, error:"Bad name/PIN" };
+
+  return { ok:true, message:"Logged in", state:getState(), balance:getBalance(name) };
+}
+
+function authUser(name, pin) {
+  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_USERS);
+  if (!sh) throw new Error("Missing Users sheet");
+  const values = sh.getDataRange().getValues(); // header + rows
+
+  const target = normalizeName(name).toLowerCase();
+  const hp = hashPin(pin);
+
+  for (let i = 1; i < values.length; i++) {
+    const n = String(values[i][0] || "").trim().toLowerCase();
+    const h = String(values[i][1] || "").trim();
+    if (n === target) return h === hp;
   }
-  async function apiPost(payload){
-    const r = await fetch(SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type":"application/json" },
-      body: JSON.stringify(payload)
-    });
-    return r.json();
+  return false;
+}
+
+function userExists(name) {
+  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_USERS);
+  const values = sh.getDataRange().getValues();
+  const target = normalizeName(name).toLowerCase();
+  for (let i = 1; i < values.length; i++) {
+    const n = String(values[i][0] || "").trim().toLowerCase();
+    if (n === target) return true;
+  }
+  return false;
+}
+
+// ---------------- Betting ----------------
+
+function placeBet(body) {
+  const cfg = readConfig();
+  if (cfg.LOCKED === true) return { ok:false, error:"Market is locked" };
+
+  const name = normalizeName(body.name);
+  const pin  = String(body.pin || "").trim();
+  const side = String(body.side || "").toUpperCase();
+  const points = Number(body.points);
+
+  if (!name) return { ok:false, error:"Name required" };
+  if (!pin)  return { ok:false, error:"PIN required" };
+  if (!authUser(name, pin)) return { ok:false, error:"Bad name/PIN" };
+
+  if (side !== "A" && side !== "B") return { ok:false, error:"Side must be A or B" };
+  if (!Number.isFinite(points) || points <= 0) return { ok:false, error:"Points must be > 0" };
+
+  const maxPts = Number(cfg.MAX_POINTS);
+  const spent = pointsSpentBy(name);
+  const remaining = maxPts - spent;
+  if (points > remaining) return { ok:false, error:`You only have ${remaining} points left (max ${maxPts})` };
+
+  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_BETS);
+  if (!sh) return { ok:false, error:"Missing Bets sheet" };
+
+  sh.appendRow([new Date(), name, side, Math.floor(points)]);
+  return { ok:true, state:getState(), balance:getBalance(name) };
+}
+
+function setLocked(body) {
+  const locked = !!body.locked;
+  writeConfigValue("LOCKED", locked ? "TRUE" : "FALSE");
+  return { ok:true, state:getState() };
+}
+
+// ---------------- State / math ----------------
+
+function getState() {
+  const cfg = readConfig();
+  const totals = totalPoints();
+  const pA = impliedPA(totals.ptsA, totals.ptsB, Number(cfg.LIQUIDITY), Number(cfg.BASE_LINE));
+  const pB = 1 - pA;
+
+  const fav = (pA === pB) ? null : (pA > pB ? "A" : "B");
+  const favProb = (fav === "A") ? pA : (fav === "B") ? pB : 0.5;
+  const edgePts = Math.max(0, Math.round((favProb - 0.5) * 100));
+  const spreadPts = Math.round(Math.abs(pA - pB) * 100);
+  const triggers = spreadPts >= Number(cfg.THRESHOLD_PTS);
+  const extraIfFavLoses = triggers ? edgePts * Number(cfg.DOLLARS_PER_POINT) : 0;
+
+  return {
+    ok: true,
+    locked: cfg.LOCKED === true,
+    teams: { A: cfg.TEAM_A, B: cfg.TEAM_B },
+    config: {
+      MAX_POINTS: Number(cfg.MAX_POINTS),
+      BASE_LINE: Number(cfg.BASE_LINE),
+      LIQUIDITY: Number(cfg.LIQUIDITY),
+      THRESHOLD_PTS: Number(cfg.THRESHOLD_PTS),
+      DOLLARS_PER_POINT: Number(cfg.DOLLARS_PER_POINT),
+      DINNER_COST: Number(cfg.DINNER_COST),
+    },
+    totals,
+    odds: { pA, pB, spreadPts, fav, edgePts, triggers, extraIfFavLoses }
+  };
+}
+
+function getBalance(name) {
+  const cfg = readConfig();
+  const maxPts = Number(cfg.MAX_POINTS);
+  const spent = pointsSpentBy(name);
+  const remaining = Math.max(0, maxPts - spent);
+  return { ok:true, name: normalizeName(name), maxPts, spent, remaining };
+}
+
+function impliedPA(ptsA, ptsB, L, baseLine) {
+  const vA = L * baseLine;
+  const vB = L * (1 - baseLine);
+  const denom = (ptsA + vA) + (ptsB + vB);
+  if (denom <= 0) return 0.5;
+  return (ptsA + vA) / denom;
+}
+
+function totalPoints() {
+  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_BETS);
+  if (!sh) return { ptsA:0, ptsB:0, total:0 };
+  const values = sh.getDataRange().getValues();
+  let ptsA = 0, ptsB = 0;
+  for (let i = 1; i < values.length; i++) {
+    const side = String(values[i][2] || "").toUpperCase();
+    const pts = Number(values[i][3]) || 0;
+    if (side === "A") ptsA += pts;
+    if (side === "B") ptsB += pts;
+  }
+  return { ptsA, ptsB, total: ptsA + ptsB };
+}
+
+function pointsSpentBy(name) {
+  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_BETS);
+  if (!sh) return 0;
+  const values = sh.getDataRange().getValues();
+  const target = normalizeName(name).toLowerCase();
+  let spent = 0;
+  for (let i = 1; i < values.length; i++) {
+    const n = String(values[i][1] || "").trim().toLowerCase();
+    const pts = Number(values[i][3]) || 0;
+    if (n === target) spent += pts;
+  }
+  return spent;
+}
+
+// ---------------- Config ----------------
+
+function readConfig() {
+  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_CONFIG);
+  if (!sh) throw new Error("Missing Config sheet");
+
+  const data = sh.getDataRange().getValues();
+  const map = {};
+  for (let i = 0; i < data.length; i++) {
+    const k = String(data[i][0] || "").trim();
+    const v = data[i][1];
+    if (k) map[k] = v;
   }
 
-  async function refreshState(){
-    const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
-    if(!st.ok) throw new Error(st.error || "bad state");
-    lastState = st;
-    renderState(st);
-  }
+  return {
+    MAX_POINTS: Number(map.MAX_POINTS || 100),
+    LOCKED: String(map.LOCKED || "FALSE").toUpperCase() === "TRUE",
+    BASE_LINE: Number(map.BASE_LINE || 0.55),
+    LIQUIDITY: Number(map.LIQUIDITY || 60),
+    THRESHOLD_PTS: Number(map.THRESHOLD_PTS || 20),
+    DOLLARS_PER_POINT: Number(map.DOLLARS_PER_POINT || 2),
+    DINNER_COST: Number(map.DINNER_COST || 300),
+    TEAM_A: String(map.TEAM_A || "Team A"),
+    TEAM_B: String(map.TEAM_B || "Team B"),
+  };
+}
 
-  async function refreshBalanceForName(name){
-    if(!name) {
-      $("remaining").textContent = "—";
+function writeConfigValue(key, value) {
+  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_CONFIG);
+  const data = sh.getDataRange().getValues();
+  for (let i = 0; i < data.length; i++) {
+    if (String(data[i][0]).trim() === key) {
+      sh.getRange(i+1, 2).setValue(value);
       return;
     }
-    const b = await apiGet(`${SCRIPT_URL}?action=balance&name=${encodeURIComponent(name)}&ts=${Date.now()}`);
-    if(!b.ok) throw new Error(b.error || "bad balance");
-    $("remaining").textContent = b.remaining;
-    $("maxPts").textContent = b.maxPts;
   }
+  sh.appendRow([key, value]);
+}
 
-  function renderState(st){
-    const locked = st.locked;
-    const cfg = st.config;
-    const t = st.totals;
-    const o = st.odds;
-    const teams = st.teams || {A:"Team A", B:"Team B"};
+// ---------------- Helpers ----------------
 
-    $("teamA").textContent = teams.A;
-    $("teamB").textContent = teams.B;
+function normalizeName(name) {
+  return String(name || "").trim().replace(/\s+/g, " ");
+}
 
-    $("statusPill").innerHTML = `<strong>Status:</strong> ${locked ? "LOCKED" : "OPEN"}`;
-    $("linePill").innerHTML = `<strong>Line:</strong> ${Math.round(o.pA*100)}/${Math.round(o.pB*100)} (ML ${moneyline(o.pA)} / ${moneyline(o.pB)})`;
-
-    $("pA").textContent = Math.round(o.pA*100) + "%";
-    $("pB").textContent = Math.round(o.pB*100) + "%";
-    $("ptsA").textContent = `${t.ptsA} pts on A`;
-    $("ptsB").textContent = `${t.ptsB} pts on B`;
-
-    $("betA").disabled = locked;
-    $("betB").disabled = locked;
-
-    const banner = $("penaltyBanner");
-    const favName = o.fav === "A" ? teams.A : o.fav === "B" ? teams.B : "No favorite";
-
-    if(!o.fav){
-      banner.className = "banner good";
-      $("penTitle").textContent = "Penalty meter: neutral";
-      $("penText").textContent = "No clear favorite → loser just pays dinner (no extra).";
-    } else if(!o.triggers){
-      banner.className = "banner warn";
-      $("penTitle").textContent = "Penalty meter: armed (not triggered)";
-      $("penText").textContent = `${favName} favored, spread ${o.spreadPts}pts < threshold. If it widens AND favorite loses, extra applies.`;
-    } else {
-      banner.className = "banner bad";
-      $("penTitle").textContent = "Penalty meter: LIVE (if favorite loses)";
-      $("penText").textContent = `${favName} edge ${o.edgePts}pts → extra if favorite loses: $${o.extraIfFavLoses}. Dinner base: $${cfg.DINNER_COST}.`;
-    }
+function hashPin(pin) {
+  // salt stored in Script Properties (generated once)
+  const props = PropertiesService.getScriptProperties();
+  let salt = props.getProperty("GOLFSHI_SALT");
+  if (!salt) {
+    salt = Utilities.getUuid();
+    props.setProperty("GOLFSHI_SALT", salt);
   }
+  const bytes = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    (salt + "|" + String(pin)),
+    Utilities.Charset.UTF_8
+  );
+  return bytes.map(b => ('0' + (b & 0xFF).toString(16)).slice(-2)).join('');
+}
 
-  async function bet(side){
-    const name = $("name").value.trim();
-    const points = Number($("points").value);
-
-    if(!name){ alert("Enter your name."); return; }
-    if(!Number.isFinite(points) || points <= 0){ alert("Enter points > 0."); return; }
-
-    try{
-      const res = await apiPost({ action:"bet", name, side, points });
-      if(!res.ok){
-        alert(res.error || "Bet rejected");
-        log(`BET REJECTED for ${name}: ${res.error || "unknown"}`);
-        await refreshState();
-        await refreshBalanceForName(name);
-        return;
-      }
-      log(`${name} bet ${points} on ${side}.`);
-      renderState(res.state);
-      await refreshBalanceForName(name);
-    }catch(err){
-      alert("Error placing bet: " + err.message);
-      log("ERROR placing bet: " + err.message);
-    }
-  }
-
-  async function setLock(locked){
-    try{
-      const res = await apiPost({ action:"lock", locked });
-      if(!res.ok){
-        alert(res.error || "Lock failed");
-        log(`LOCK FAILED: ${res.error || "unknown"}`);
-        return;
-      }
-      log(locked ? "Market locked." : "Market unlocked.");
-      renderState(res.state);
-    }catch(err){
-      alert("Error locking: " + err.message);
-      log("ERROR locking: " + err.message);
-    }
-  }
-
-  async function refreshAll(){
-    try{
-      await refreshState();
-      const name = $("name").value.trim();
-      await refreshBalanceForName(name);
-      log("Refreshed.");
-    }catch(err){
-      log("ERROR refreshing: " + err.message);
-    }
-  }
-
-  // Refresh balance as they type their name (debounced)
-  let nameTimer = null;
-  $("name").addEventListener("input", ()=>{
-    clearTimeout(nameTimer);
-    nameTimer = setTimeout(async ()=>{
-      const name = $("name").value.trim();
-      if(name && name !== lastBalanceName){
-        lastBalanceName = name;
-        try { await refreshBalanceForName(name); } catch(e){}
-      } else if(!name){
-        $("remaining").textContent = "—";
-      }
-    }, 250);
-  });
-
-  // auto-refresh market every 5 seconds
-  refreshAll();
-  setInterval(refreshAll, 5000);
-</script>
-</body>
-</html>
+function jsonResponse(obj, code) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
