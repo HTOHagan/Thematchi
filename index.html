@@ -83,33 +83,75 @@
 </header>
 
 <main>
-  <!-- AUTH -->
-  <section class="card" id="authCard">
+<section class="card" id="authCard">
   <div class="hd">
-    <div class="pill"><strong>Step 1:</strong> Who are you?</div>
+    <div class="pill"><strong>Step 1:</strong> Sign in</div>
     <div class="pill" id="authPill"><strong>Status:</strong> not logged in</div>
   </div>
 
   <div class="bd">
-    <div class="row">
-      <button id="modeNewBtn" onclick="setMode('new')">New user</button>
-      <button id="modeReturningBtn" class="secondary" onclick="setMode('returning')">Returning user</button>
+    <div class="row" style="align-items:center">
+      <div style="flex:2; min-width:260px">
+        <label style="margin-bottom:10px">Choose:</label>
+
+        <div style="display:flex; gap:14px; flex-wrap:wrap">
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer">
+            <input type="radio" name="authMode" value="new" checked onchange="setAuthMode(this.value)">
+            <span style="font-weight:900">New user</span>
+          </label>
+
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer">
+            <input type="radio" name="authMode" value="returning" onchange="setAuthMode(this.value)">
+            <span style="font-weight:900">Returning user</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="flex:1; min-width:220px; text-align:right">
+        <button class="secondary" onclick="clearSaved()">Clear saved login</button>
+      </div>
     </div>
 
-    <div class="row" style="margin-top:12px">
-      <div>
-        <label>Your name</label>
-        <input id="name" type="text" placeholder="Tom" autocomplete="name"/>
+    <!-- NEW USER FORM -->
+    <div id="newUserForm" style="margin-top:14px">
+      <div class="row">
+        <div>
+          <label>Create your name</label>
+          <input id="nameNew" type="text" placeholder="Enter your name" autocomplete="name" />
+        </div>
+        <div>
+          <label>Create a PIN (4+ chars)</label>
+          <input id="pinNew" type="password" placeholder="Enter PIN" autocomplete="new-password" />
+        </div>
       </div>
-      <div>
-        <label>Your PIN (4+ chars)</label>
-        <input id="pin" type="password" placeholder="1234" autocomplete="current-password"/>
+
+      <div class="row" style="margin-top:12px">
+        <button onclick="registerFromNew()">Create PIN</button>
+      </div>
+      <div class="small" style="margin-top:10px;color:var(--muted)">
+        If your name is already taken, switch to “Returning user” and log in.
       </div>
     </div>
 
-    <div class="row" style="margin-top:12px">
-      <button id="primaryAuthBtn" onclick="primaryAuth()">Create PIN</button>
-      <button id="secondaryAuthBtn" class="secondary" onclick="secondaryAuth()">Login instead</button>
+    <!-- RETURNING USER FORM -->
+    <div id="returningUserForm" class="hidden" style="margin-top:14px">
+      <div class="row">
+        <div>
+          <label>Your name</label>
+          <input id="nameReturn" type="text" placeholder="Enter your name" autocomplete="name" />
+        </div>
+        <div>
+          <label>Your PIN</label>
+          <input id="pinReturn" type="password" placeholder="Enter PIN" autocomplete="current-password" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button onclick="loginFromReturning()">Login</button>
+      </div>
+      <div class="small" style="margin-top:10px;color:var(--muted)">
+        Forgot your PIN? Ask the “commissioner” to delete your row in the Users sheet.
+      </div>
     </div>
 
     <div style="margin-top:12px">
