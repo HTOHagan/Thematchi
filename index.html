@@ -41,10 +41,8 @@
     .pill strong{color:var(--text)}
     .bd{padding:16px}
     label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
-    input,button{
-      font: inherit;
-    }
-    input[type="text"], input[type="number"], input[type="password"]{
+    input,button{font:inherit}
+    input[type="text"], input[type="number"]{
       width:100%;padding:12px 12px;border-radius:12px;border:1px solid var(--line);
       background: rgba(10,16,40,.55);color:var(--text);outline:none;
     }
@@ -53,16 +51,16 @@
     .market{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
     @media(max-width:540px){.market{grid-template-columns:1fr}}
     .side{border:1px solid var(--line);border-radius:16px;background:rgba(15,23,48,.6);padding:14px}
-    .name{font-weight:900;font-size:14px;margin:0 0 6px}
+    .name{font-weight:950;font-size:14px;margin:0 0 6px}
     .price{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-    .big{font-size:34px;font-weight:950;letter-spacing:-.5px}
+    .big{font-size:34px;font-weight:980;letter-spacing:-.5px}
     .small{font-size:12px;color:var(--muted)}
     .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
     button{
       border:1px solid var(--line);
       background: linear-gradient(180deg, rgba(42,60,122,.95), rgba(34,52,107,.95));
       color:var(--text);
-      padding:12px 12px;border-radius:12px;cursor:pointer;font-weight:900;flex:1;min-width:150px;
+      padding:12px 12px;border-radius:12px;cursor:pointer;font-weight:950;flex:1;min-width:150px;
     }
     button.secondary{background:rgba(18,26,51,.55)}
     button:disabled{opacity:.5;cursor:not-allowed}
@@ -92,22 +90,17 @@
         <div class="pill" id="statusPill"><strong>Status:</strong> loading…</div>
         <div class="pill" id="linePill"><strong>Line:</strong> …</div>
       </div>
+
       <div class="bd">
         <div class="row">
           <div>
             <label>Your name</label>
             <input id="name" type="text" placeholder="Type your name (e.g. Tom)" />
+            <div class="small" style="margin-top:8px">
+              <span class="pill"><strong>Remaining:</strong> <span id="remaining">—</span> / <span id="maxPts">—</span> pts</span>
+            </div>
           </div>
-          <div>
-            <label>PIN (shared)</label>
-            <input id="pin" type="password" placeholder="Trip PIN" />
-          </div>
-        </div>
 
-        <div class="row" style="margin-top:10px">
-          <div>
-            <div class="pill"><strong>Remaining:</strong> <span id="remaining">—</span> / <span id="maxPts">—</span> pts</div>
-          </div>
           <div>
             <label>Bet points</label>
             <input id="points" type="number" min="1" value="10" />
@@ -156,8 +149,8 @@
 
     <aside class="card">
       <div class="hd">
-        <div class="pill"><strong>Admin:</strong> lock / unlock</div>
-        <button class="secondary" onclick="refresh()">Refresh</button>
+        <div class="pill"><strong>Admin:</strong> lock/unlock (no PIN 😈)</div>
+        <button class="secondary" onclick="refreshAll()">Refresh</button>
       </div>
       <div class="bd">
         <div class="row">
@@ -174,12 +167,11 @@
 </main>
 
 <script>
-  // 1) PUT YOUR APPS SCRIPT WEB APP URL HERE (ends with /exec)
-  const SCRIPT_URL = "PASTE_YOUR_SCRIPT_URL_HERE";
-
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxX9eMHux84z5TC6p9k9craB17En4MOVKLfy-7GGNssm0-cdr2LZyiifElmKKRePlk9BA/exec";
   const $ = (id) => document.getElementById(id);
 
   let lastState = null;
+  let lastBalanceName = "";
 
   function log(s){
     const ts = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
@@ -188,12 +180,17 @@
 
   function setPts(n){ $("points").value = n; }
 
-  async function apiGetState(){
-    const url = `${SCRIPT_URL}?action=state&ts=${Date.now()}`;
+  function moneyline(p){
+    p = Math.min(0.9999, Math.max(0.0001, p));
+    const ml = (p > 0.5) ? - (p/(1-p))*100 : ((1-p)/p)*100;
+    const r = Math.round(ml);
+    return (r > 0 ? "+"+r : ""+r);
+  }
+
+  async function apiGet(url){
     const r = await fetch(url);
     return r.json();
   }
-
   async function apiPost(payload){
     const r = await fetch(SCRIPT_URL, {
       method: "POST",
@@ -203,34 +200,36 @@
     return r.json();
   }
 
-  function moneyline(p){
-    p = Math.min(0.9999, Math.max(0.0001, p));
-    const ml = (p > 0.5) ? - (p/(1-p))*100 : ((1-p)/p)*100;
-    const r = Math.round(ml);
-    return (r > 0 ? "+"+r : ""+r);
+  async function refreshState(){
+    const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
+    if(!st.ok) throw new Error(st.error || "bad state");
+    lastState = st;
+    renderState(st);
   }
 
-  async function refresh(){
-    try{
-      const st = await apiGetState();
-      if(!st.ok) throw new Error(st.error || "bad state");
-      lastState = st;
-      render(st);
-    }catch(err){
-      log("ERROR loading state: " + err.message);
+  async function refreshBalanceForName(name){
+    if(!name) {
+      $("remaining").textContent = "—";
+      return;
     }
+    const b = await apiGet(`${SCRIPT_URL}?action=balance&name=${encodeURIComponent(name)}&ts=${Date.now()}`);
+    if(!b.ok) throw new Error(b.error || "bad balance");
+    $("remaining").textContent = b.remaining;
+    $("maxPts").textContent = b.maxPts;
   }
 
-  function render(st){
+  function renderState(st){
     const locked = st.locked;
     const cfg = st.config;
     const t = st.totals;
     const o = st.odds;
+    const teams = st.teams || {A:"Team A", B:"Team B"};
+
+    $("teamA").textContent = teams.A;
+    $("teamB").textContent = teams.B;
 
     $("statusPill").innerHTML = `<strong>Status:</strong> ${locked ? "LOCKED" : "OPEN"}`;
     $("linePill").innerHTML = `<strong>Line:</strong> ${Math.round(o.pA*100)}/${Math.round(o.pB*100)} (ML ${moneyline(o.pA)} / ${moneyline(o.pB)})`;
-
-    $("maxPts").textContent = cfg.MAX_POINTS;
 
     $("pA").textContent = Math.round(o.pA*100) + "%";
     $("pB").textContent = Math.round(o.pB*100) + "%";
@@ -240,9 +239,8 @@
     $("betA").disabled = locked;
     $("betB").disabled = locked;
 
-    // Penalty preview (if favorite loses)
-    const favName = o.fav === "A" ? "Team A" : o.fav === "B" ? "Team B" : "No favorite";
     const banner = $("penaltyBanner");
+    const favName = o.fav === "A" ? teams.A : o.fav === "B" ? teams.B : "No favorite";
 
     if(!o.fav){
       banner.className = "banner good";
@@ -257,34 +255,27 @@
       $("penTitle").textContent = "Penalty meter: LIVE (if favorite loses)";
       $("penText").textContent = `${favName} edge ${o.edgePts}pts → extra if favorite loses: $${o.extraIfFavLoses}. Dinner base: $${cfg.DINNER_COST}.`;
     }
-
-    // Remaining points estimate (we can’t compute per-user remaining from state alone without another endpoint),
-    // so show a friendly hint instead:
-    $("remaining").textContent = "checked at bet time";
   }
 
   async function bet(side){
     const name = $("name").value.trim();
-    const pin = $("pin").value.trim();
     const points = Number($("points").value);
 
-    if(!SCRIPT_URL || SCRIPT_URL.includes("PASTE_YOUR_SCRIPT_URL_HERE")){
-      alert("Set SCRIPT_URL in the HTML to your Apps Script /exec URL.");
-      return;
-    }
     if(!name){ alert("Enter your name."); return; }
-    if(!pin){ alert("Enter the PIN."); return; }
     if(!Number.isFinite(points) || points <= 0){ alert("Enter points > 0."); return; }
 
     try{
-      const res = await apiPost({ action:"bet", name, side, points, pin });
+      const res = await apiPost({ action:"bet", name, side, points });
       if(!res.ok){
         alert(res.error || "Bet rejected");
         log(`BET REJECTED for ${name}: ${res.error || "unknown"}`);
+        await refreshState();
+        await refreshBalanceForName(name);
         return;
       }
       log(`${name} bet ${points} on ${side}.`);
-      render(res.state);
+      renderState(res.state);
+      await refreshBalanceForName(name);
     }catch(err){
       alert("Error placing bet: " + err.message);
       log("ERROR placing bet: " + err.message);
@@ -292,26 +283,50 @@
   }
 
   async function setLock(locked){
-    const pin = $("pin").value.trim();
-    if(!pin){ alert("Enter the PIN."); return; }
     try{
-      const res = await apiPost({ action:"lock", locked, pin });
+      const res = await apiPost({ action:"lock", locked });
       if(!res.ok){
         alert(res.error || "Lock failed");
         log(`LOCK FAILED: ${res.error || "unknown"}`);
         return;
       }
       log(locked ? "Market locked." : "Market unlocked.");
-      render(res.state);
+      renderState(res.state);
     }catch(err){
       alert("Error locking: " + err.message);
       log("ERROR locking: " + err.message);
     }
   }
 
-  // auto-refresh every 5s so phones see updates
-  refresh();
-  setInterval(refresh, 5000);
+  async function refreshAll(){
+    try{
+      await refreshState();
+      const name = $("name").value.trim();
+      await refreshBalanceForName(name);
+      log("Refreshed.");
+    }catch(err){
+      log("ERROR refreshing: " + err.message);
+    }
+  }
+
+  // Refresh balance as they type their name (debounced)
+  let nameTimer = null;
+  $("name").addEventListener("input", ()=>{
+    clearTimeout(nameTimer);
+    nameTimer = setTimeout(async ()=>{
+      const name = $("name").value.trim();
+      if(name && name !== lastBalanceName){
+        lastBalanceName = name;
+        try { await refreshBalanceForName(name); } catch(e){}
+      } else if(!name){
+        $("remaining").textContent = "—";
+      }
+    }, 250);
+  });
+
+  // auto-refresh market every 5 seconds
+  refreshAll();
+  setInterval(refreshAll, 5000);
 </script>
 </body>
 </html>
