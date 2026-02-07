@@ -602,5 +602,37 @@
 
   setInterval(()=>{ if(!$("betCard").classList.contains("hidden")) refresh(); }, 5000);
 </script>
+  function toggleCommissioner(){
+  const panel = $("commPanel");
+  if(!panel) return;
+  panel.classList.toggle("hidden");
+  const pin = $("adminPin");
+  if(pin && !panel.classList.contains("hidden")) pin.focus();
+}
+
+async function setWinner(winner){
+  const adminPin = ($("adminPin")?.value || "").trim();
+  if(!adminPin){ alert("Enter admin PIN"); return; }
+
+  $("commMsg").innerHTML = `<strong>Status:</strong> Setting winner…`;
+
+  const res = await apiPost({ action:"setwinner", winner, adminPin });
+  if(!res.ok){
+    $("commMsg").innerHTML = `<strong>Status:</strong> ${res.error || "Failed"}`;
+    alert(res.error || "Failed");
+    return;
+  }
+
+  $("commMsg").innerHTML = `<strong>Status:</strong> Winner set to ${winner}`;
+  // refresh state + your results/pot UI if you have it
+  await refresh();
+  if(typeof refreshResults === "function") await refreshResults();
+}
+
+async function clearWinner(){
+  // easiest method: manually clear WINNER in Config sheet.
+  // If you want an API for this, I can add action=clearwinner to the backend.
+  alert("To clear winner: open Config sheet and blank out WINNER.");
+}
 </body>
 </html>
