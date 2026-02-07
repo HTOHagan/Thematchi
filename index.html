@@ -23,9 +23,7 @@
     }
 
     main{max-width:760px;margin:0 auto;padding:0 16px 28px}
-    header{
-      max-width:760px;margin:0 auto;padding:22px 16px 10px;text-align:center;
-    }
+    header{max-width:760px;margin:0 auto;padding:22px 16px 10px;text-align:center;}
     h1{margin:0;font-size:26px;letter-spacing:-.3px}
     .sub{color:var(--muted);font-size:15px;margin-top:6px}
 
@@ -93,9 +91,7 @@
     .hidden{display:none!important}
 
     /* Controls */
-    .controls{
-      display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:10px;
-    }
+    .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:10px;}
     .controls .pill{flex:1;min-width:220px}
     .ptsBox{display:flex;flex-direction:column;gap:6px;min-width:160px;flex:0 0 auto;}
     .ptsBox input{width:160px;padding:12px;border-radius:12px;font-size:16px;}
@@ -166,6 +162,22 @@
       opacity:.55;
     }
     #adminBtn:hover{opacity:.85}
+
+    /* Confirm modal */
+    #confirmOverlay{
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.55);
+      display:flex; align-items:center; justify-content:center;
+      padding:16px; z-index:9999;
+    }
+    #confirmCard{
+      width:min(520px, 100%);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow:0 20px 50px rgba(0,0,0,.45);
+      padding:16px;
+    }
 
     @media (max-width:540px){
       main{max-width:900px}
@@ -283,7 +295,7 @@
           <div class="small" id="ptsA">—</div>
 
           <div style="margin-top:12px">
-            <button id="betA" class="betBtn" type="button" onclick="bet('A')">Bet on Team A</button>
+            <button id="betA" class="betBtn" type="button" onclick="openConfirm('A')">Bet on Team A</button>
           </div>
         </div>
 
@@ -305,7 +317,7 @@
           <div class="small" id="ptsB">—</div>
 
           <div style="margin-top:12px">
-            <button id="betB" class="betBtn secondary" type="button" onclick="bet('B')">Bet on Team B</button>
+            <button id="betB" class="betBtn secondary" type="button" onclick="openConfirm('B')">Bet on Team B</button>
           </div>
 
           <!-- Tiny Admin -->
@@ -338,6 +350,26 @@
 
 </main>
 
+<!-- Confirm Bet Modal -->
+<div id="confirmOverlay" class="hidden" onclick="overlayClickClose(event)">
+  <div id="confirmCard" onclick="event.stopPropagation()">
+    <div style="font-weight:950;font-size:16px;margin-bottom:8px;">Confirm your wager</div>
+
+    <div class="pill" id="confirmText" style="margin-bottom:12px;">
+      <strong>Wager:</strong> —
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="secondary" type="button" onclick="closeConfirm()">Cancel</button>
+      <button type="button" onclick="confirmBetNow()">Confirm Bet</button>
+    </div>
+
+    <div class="small" style="margin-top:10px;">
+      You can undo for 5 minutes if you mis-click.
+    </div>
+  </div>
+</div>
+
 <script>
   // ✅ Your Apps Script Web App URL
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzxOVSjxpBDALIibr1bnqDJW7eYYIwlXGW2srhTyJ2KYedOuJkNO_jgDzPOWuDXxf4H3A/exec";
@@ -353,6 +385,10 @@
   let lastBetId = "";
   let undoUntil = 0;
   let undoTimer = null;
+
+  // Confirm bet state
+  let pendingSide = "";
+  let pendingPts = 0;
 
   function setPts(n){ $("points").value = n; }
 
@@ -565,9 +601,49 @@
     renderBalance(res.balance);
   }
 
-  async function bet(side){
+  /* ---------------- Confirm popup flow ---------------- */
+
+  function escapeHtml(s){
+    return String(s ?? "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#39;");
+  }
+
+  function overlayClickClose(e){
+    // click outside card closes
+    closeConfirm();
+  }
+
+  function openConfirm(side){
     const pts = Number($("points").value);
     if(!Number.isFinite(pts) || pts <= 0){ alert("Enter points > 0."); return; }
+
+    const teamName = (side === "A") ? $("teamA").textContent : $("teamB").textContent;
+
+    pendingSide = side;
+    pendingPts = pts;
+
+    $("confirmText").innerHTML =
+      `<strong>${pts} points</strong> on <strong>${escapeHtml(teamName)}</strong>`;
+
+    $("confirmOverlay").classList.remove("hidden");
+  }
+
+  function closeConfirm(){
+    $("confirmOverlay").classList.add("hidden");
+    pendingSide = "";
+    pendingPts = 0;
+  }
+
+  async function confirmBetNow(){
+    if(!pendingSide || !pendingPts){ closeConfirm(); return; }
+
+    const side = pendingSide;
+    const pts = pendingPts;
+    closeConfirm();
 
     setActiveSide(side);
 
@@ -622,7 +698,6 @@
     $("ptsA").textContent = `${t.ptsA} pts on A`;
     $("ptsB").textContent = `${t.ptsB} pts on B`;
 
-    // ✅ Buttons use team names (not A/B)
     $("betA").textContent = `Bet on ${teams.A}`;
     $("betB").textContent = `Bet on ${teams.B}`;
 
