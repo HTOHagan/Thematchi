@@ -266,30 +266,7 @@
         <button class="secondary" type="button" onclick="logout()">Log out</button>
       </div>
     </div>
-<!-- COMMISSIONER (hidden) -->
-<div class="metaRow" style="margin-top:8px">
-  <button class="secondary" type="button" onclick="toggleCommissioner()">
-    Commissioner
-  </button>
-</div>
 
-<div id="commPanel" class="hidden" style="margin-top:10px">
-  <div class="pill" style="margin-bottom:10px">
-    <strong>Commissioner tools</strong> (winner + results)
-  </div>
-
-  <label>Admin PIN</label>
-  <input id="adminPin" type="password" placeholder="Enter admin PIN" autocomplete="off" />
-
-  <div class="preset" style="margin-top:10px">
-    <button type="button" onclick="setWinner('A')">Set Winner: Team A</button>
-    <button type="button" onclick="setWinner('B')">Set Winner: Team B</button>
-    <button class="secondary" type="button" onclick="clearWinner()">Clear Winner</button>
-  </div>
-
-  <div class="pill" id="commMsg" style="margin-top:10px">
-    <strong>Status:</strong> —
-  </div>
 </div>
     <div class="controls">
       <div class="pill" id="maxPill">
@@ -342,6 +319,30 @@
         <div class="small" id="ptsB">—</div>
         <div style="margin-top:12px">
           <button id="betB" class="secondary" type="button" onclick="bet('B')">Bet on B</button>
+       <!-- Commissioner (hidden + tiny) -->
+<div style="margin-top:10px; display:flex; justify-content:flex-end;">
+  <button id="commBtn" type="button" onclick="toggleCommissioner()">
+    comm
+  </button>
+</div>
+
+<div id="commPanel" class="hidden" style="margin-top:10px">
+  <div class="pill" style="margin-bottom:10px">
+    <strong>Commissioner</strong>
+  </div>
+
+  <label>Admin PIN</label>
+  <input id="adminPin" type="password" placeholder="Admin PIN" autocomplete="off" />
+
+  <div class="preset" style="margin-top:10px">
+    <button type="button" onclick="setWinner('A')">Winner: A</button>
+    <button type="button" onclick="setWinner('B')">Winner: B</button>
+  </div>
+
+  <div class="pill" id="commMsg" style="margin-top:10px">
+    <strong>Status:</strong> —
+  </div>
+</div>
         </div>
       </div>
     </div>
