@@ -75,16 +75,15 @@
       color:var(--text);
       outline:none;
     }
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .row>*{flex:1;min-width:200px}
 
     button{
       border:1px solid var(--line);
       background: linear-gradient(180deg, rgba(42,60,122,.95), rgba(34,52,107,.95));
       color:var(--text);
-      padding:14px 14px;                 /* slightly taller tap target */
+      padding:14px 14px;
       border-radius:14px;
-      cursor:pointer;font-weight:900;
+      cursor:pointer;
+      font-weight:900;
     }
     button.secondary{background:rgba(18,26,51,.55)}
     button:disabled{opacity:.5;cursor:not-allowed}
@@ -142,9 +141,7 @@
     }
     .big{font-size:38px;font-weight:980; letter-spacing:-.4px}
     .small{font-size:12px;color:var(--muted)}
-
-    /* Hide the "implied" label completely */
-    .side .price .small{ display:none; }
+    .side .price .small{ display:none; } /* hide implied */
 
     /* Compact betting controls */
     .controls{
@@ -193,12 +190,22 @@
       align-items:center;
     }
 
+    /* Tiny Admin button (hard to hit accidentally) */
+    #commBtn{
+      padding:6px 10px;
+      font-size:11px;
+      font-weight:900;
+      border-radius:12px;
+      opacity:.28;
+      background:rgba(18,26,51,.35);
+    }
+    #commBtn:hover{opacity:.6}
+
     .countStrong{color:var(--text);font-weight:900}
     .hidden{display:none!important}
 
-    /* Mobile: bigger tap targets + less awkward spacing */
     @media (max-width: 540px){
-      main{max-width:900px} /* let it breathe on phones */
+      main{max-width:900px}
       header{max-width:900px}
       h1{font-size:24px}
       .controls{flex-direction:column; align-items:stretch}
@@ -217,137 +224,150 @@
 </header>
 
 <main>
-<!-- AUTH -->
-<section class="card" id="authCard">
-  <div class="hd">
-    <div class="pill"><strong>Step 1:</strong> Sign in</div>
-    <div class="pill" id="authPill"><strong>Status:</strong> not logged in</div>
-  </div>
-  <div class="bd">
-    <label>Choose:</label>
-    <div class="seg">
-      <button id="modeNewBtn" class="segBtn" type="button" onclick="setAuthMode('new')">New user</button>
-      <button id="modeReturningBtn" class="segBtn secondary" type="button" onclick="setAuthMode('returning')">Returning user</button>
+  <!-- AUTH -->
+  <section class="card" id="authCard">
+    <div class="hd">
+      <div class="pill"><strong>Step 1:</strong> Sign in</div>
+      <div class="pill" id="authPill"><strong>Status:</strong> not logged in</div>
     </div>
 
-    <div id="newUserPanel" style="margin-top:14px">
-      <label>Name</label>
-      <input id="newName" placeholder="Enter your name" autocomplete="name" />
-      <label style="margin-top:10px">PIN (4+ chars)</label>
-      <input id="newPin" type="password" placeholder="Enter PIN" autocomplete="new-password" />
-      <button style="margin-top:12px" type="button" onclick="registerNewUser()">Create account</button>
-    </div>
-
-    <div id="returningUserPanel" class="hidden" style="margin-top:14px">
-      <label>Name</label>
-      <input id="returnName" placeholder="Enter your name" autocomplete="name" />
-      <label style="margin-top:10px">PIN</label>
-      <input id="returnPin" type="password" placeholder="Enter PIN" autocomplete="current-password" />
-      <button style="margin-top:12px" type="button" onclick="loginReturningUser()">Login</button>
-    </div>
-  </div>
-</section>
-
-<!-- BETTING -->
-<section class="card hidden" id="betCard">
-  <div class="hd">
-    <div class="pill" id="statusPill"></div>
-    <div class="pill" id="userPill"></div>
-  </div>
-
-  <div class="bd">
-    <div class="metaStack">
-      <div class="metaRow">
-        <div class="pill" id="linePill"></div>
-        <div class="pill" id="countPill"><strong>Market locks:</strong> <span class="countStrong" id="countdown">—</span></div>
+    <div class="bd">
+      <label>Choose:</label>
+      <div class="seg">
+        <button id="modeNewBtn" class="segBtn" type="button" onclick="setAuthMode('new')">New user</button>
+        <button id="modeReturningBtn" class="segBtn secondary" type="button" onclick="setAuthMode('returning')">Returning user</button>
       </div>
 
-      <div class="metaRow">
-        <button class="secondary" type="button" onclick="logout()">Log out</button>
-      </div>
-    </div>
-
-</div>
-    <div class="controls">
-      <div class="pill" id="maxPill">
-        <strong>Max <span id="maxPts">—</span> • Left:</strong> <span id="remaining">—</span>
+      <div id="newUserPanel" style="margin-top:14px">
+        <label>Name</label>
+        <input id="newName" placeholder="Enter your name" autocomplete="name" />
+        <label style="margin-top:10px">PIN (4+ chars)</label>
+        <input id="newPin" type="password" placeholder="Enter PIN" autocomplete="new-password" />
+        <button style="margin-top:12px" type="button" onclick="registerNewUser()">Create account</button>
       </div>
 
-      <div class="ptsBox">
-        <label style="margin:0">Points</label>
-        <input id="points" type="number" min="1" value="10" />
+      <div id="returningUserPanel" class="hidden" style="margin-top:14px">
+        <label>Name</label>
+        <input id="returnName" placeholder="Enter your name" autocomplete="name" />
+        <label style="margin-top:10px">PIN</label>
+        <input id="returnPin" type="password" placeholder="Enter PIN" autocomplete="current-password" />
+        <button style="margin-top:12px" type="button" onclick="loginReturningUser()">Login</button>
       </div>
     </div>
+  </section>
 
-    <div class="preset">
-      <button class="secondary" type="button" onclick="setPts(5)">5</button>
-      <button class="secondary" type="button" onclick="setPts(10)">10</button>
-      <button class="secondary" type="button" onclick="setPts(20)">20</button>
-      <button class="secondary" type="button" onclick="setPts(50)">50</button>
-      <button class="secondary" type="button" onclick="setPts(100)">100</button>
+  <!-- BETTING -->
+  <section class="card hidden" id="betCard">
+    <div class="hd">
+      <div class="pill" id="statusPill"></div>
+      <div class="pill" id="userPill"></div>
     </div>
 
-    <div class="market">
-      <div class="side">
-        <div class="teamHead">
-          <div class="teamLeft">
-            <div class="avatar">
-              <img id="imgA" alt="Team A" />
-              <span id="iniA">A</span>
+    <div class="bd">
+      <div class="metaStack">
+        <div class="metaRow">
+          <div class="pill" id="linePill"></div>
+          <div class="pill" id="countPill"><strong>Market locks:</strong> <span class="countStrong" id="countdown">—</span></div>
+        </div>
+        <div class="metaRow">
+          <button class="secondary" type="button" onclick="logout()">Log out</button>
+        </div>
+      </div>
+
+      <!-- ✅ (FIX) no extra </div> here -->
+
+      <div class="controls">
+        <div class="pill" id="maxPill">
+          <strong>Max <span id="maxPts">—</span> • Left:</strong> <span id="remaining">—</span>
+        </div>
+
+        <div class="ptsBox">
+          <label style="margin:0">Points</label>
+          <input id="points" type="number" min="1" value="10" />
+        </div>
+      </div>
+
+      <div class="preset">
+        <button class="secondary" type="button" onclick="setPts(5)">5</button>
+        <button class="secondary" type="button" onclick="setPts(10)">10</button>
+        <button class="secondary" type="button" onclick="setPts(20)">20</button>
+        <button class="secondary" type="button" onclick="setPts(50)">50</button>
+        <button class="secondary" type="button" onclick="setPts(100)">100</button>
+      </div>
+
+      <div class="market">
+        <!-- TEAM A -->
+        <div class="side">
+          <div class="teamHead">
+            <div class="teamLeft">
+              <div class="avatar">
+                <img id="imgA" alt="Team A" />
+                <span id="iniA">A</span>
+              </div>
+              <div class="teamName" id="teamA">Team A</div>
             </div>
-            <div class="teamName" id="teamA">Team A</div>
+          </div>
+
+          <div class="price">
+            <div class="big" id="pA">—</div>
+            <div class="small">implied</div>
+          </div>
+
+          <div class="small" id="ptsA">—</div>
+          <div style="margin-top:12px">
+            <button id="betA" type="button" onclick="bet('A')">Bet on A</button>
           </div>
         </div>
-        <div class="price"><div class="big" id="pA">—</div><div class="small">implied</div></div>
-        <div class="small" id="ptsA">—</div>
-        <div style="margin-top:12px">
-          <button id="betA" type="button" onclick="bet('A')">Bet on A</button>
-        </div>
-      </div>
 
-      <div class="side">
-        <div class="teamHead">
-          <div class="teamLeft">
-            <div class="avatar">
-              <img id="imgB" alt="Team B" />
-              <span id="iniB">B</span>
+        <!-- TEAM B -->
+        <div class="side">
+          <div class="teamHead">
+            <div class="teamLeft">
+              <div class="avatar">
+                <img id="imgB" alt="Team B" />
+                <span id="iniB">B</span>
+              </div>
+              <div class="teamName" id="teamB">Team B</div>
             </div>
-            <div class="teamName" id="teamB">Team B</div>
           </div>
-        </div>
-        <div class="price"><div class="big" id="pB">—</div><div class="small">implied</div></div>
-        <div class="small" id="ptsB">—</div>
-        <div style="margin-top:12px">
-          <button id="betB" class="secondary" type="button" onclick="bet('B')">Bet on B</button>
-       <!-- Commissioner (hidden + tiny) -->
-<div style="margin-top:12px; display:flex; justify-content:flex-end;">
-  <button id="commBtn" type="button" onclick="toggleCommissioner()">
-    Admin
-  </button>
-</div>
 
-<div id="commPanel" class="hidden" style="margin-top:10px">
-  <div class="pill" style="margin-bottom:10px">
-    <strong>Commissioner</strong>
-  </div>
+          <div class="price">
+            <div class="big" id="pB">—</div>
+            <div class="small">implied</div>
+          </div>
 
-  <label>Admin PIN</label>
-  <input id="adminPin" type="password" placeholder="Admin PIN" autocomplete="off" />
+          <div class="small" id="ptsB">—</div>
 
-  <div class="preset" style="margin-top:10px">
-    <button type="button" onclick="setWinner('A')">Winner: A</button>
-    <button type="button" onclick="setWinner('B')">Winner: B</button>
-  </div>
+          <div style="margin-top:12px">
+            <button id="betB" class="secondary" type="button" onclick="bet('B')">Bet on B</button>
+          </div>
 
-  <div class="pill" id="commMsg" style="margin-top:10px">
-    <strong>Status:</strong> —
-  </div>
-</div>
+          <!-- Admin (tiny + tucked under Team B) -->
+          <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+            <button id="commBtn" type="button" onclick="toggleCommissioner()">Admin</button>
+          </div>
+
+          <div id="commPanel" class="hidden" style="margin-top:10px">
+            <div class="pill" style="margin-bottom:10px">
+              <strong>Admin</strong>
+            </div>
+
+            <label>Admin PIN</label>
+            <input id="adminPin" type="password" placeholder="Admin PIN" autocomplete="off" />
+
+            <div class="preset" style="margin-top:10px">
+              <button type="button" onclick="setWinner('A')">Winner: A</button>
+              <button type="button" onclick="setWinner('B')">Winner: B</button>
+            </div>
+
+            <div class="pill" id="commMsg" style="margin-top:10px">
+              <strong>Status:</strong> —
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 </main>
 
 <script>
@@ -572,6 +592,36 @@
     $("countdown").textContent = fmtCountdown(ms);
   }
 
+  function toggleCommissioner(){
+    const panel = $("commPanel");
+    if(!panel) return;
+    panel.classList.toggle("hidden");
+    const pin = $("adminPin");
+    if(pin && !panel.classList.contains("hidden")) pin.focus();
+  }
+
+  async function setWinner(winner){
+    const adminPin = ($("adminPin")?.value || "").trim();
+    if(!adminPin){ alert("Enter admin PIN"); return; }
+
+    const msg = $("commMsg");
+    if(msg) msg.innerHTML = `<strong>Status:</strong> Setting winner…`;
+
+    const res = await apiPost({ action:"setwinner", winner, adminPin });
+    if(!res.ok){
+      if(msg) msg.innerHTML = `<strong>Status:</strong> ${res.error || "Failed"}`;
+      alert(res.error || "Failed");
+      return;
+    }
+
+    if(msg) msg.innerHTML = `<strong>Status:</strong> Winner set to ${winner}`;
+    await refresh();
+  }
+
+  function clearWinner(){
+    alert("To clear winner: open Config sheet and blank out WINNER.");
+  }
+
   (async function boot(){
     setAuthMode("returning");
     showAuth();
@@ -600,37 +650,8 @@
       }catch(e){}
     }
   })();
-function toggleCommissioner(){
-  const panel = $("commPanel");
-  if(!panel) return;
-  panel.classList.toggle("hidden");
-  const pin = $("adminPin");
-  if(pin && !panel.classList.contains("hidden")) pin.focus();
-}
 
-async function setWinner(winner){
-  const adminPin = ($("adminPin")?.value || "").trim();
-  if(!adminPin){ alert("Enter admin PIN"); return; }
-
-  const msg = $("commMsg");
-  if(msg) msg.innerHTML = `<strong>Status:</strong> Setting winner…`;
-
-  const res = await apiPost({ action:"setwinner", winner, adminPin });
-  if(!res.ok){
-    if(msg) msg.innerHTML = `<strong>Status:</strong> ${res.error || "Failed"}`;
-    alert(res.error || "Failed");
-    return;
-  }
-
-  if(msg) msg.innerHTML = `<strong>Status:</strong> Winner set to ${winner}`;
-  await refresh();
-}
-
-function clearWinner(){
-  alert("To clear winner: open Config sheet and blank out WINNER.");
-}
   setInterval(()=>{ if(!$("betCard").classList.contains("hidden")) refresh(); }, 5000);
 </script>
-
 </body>
 </html>
