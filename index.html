@@ -79,7 +79,6 @@
     button.secondary{background:rgba(18,26,51,.55)}
     button:disabled{opacity:.5;cursor:not-allowed}
 
-    /* Active button state (blue) */
     button.active{
       background: linear-gradient(180deg, rgba(80,140,255,.95), rgba(60,120,235,.95));
       border-color: rgba(120,170,255,.45);
@@ -93,7 +92,6 @@
     .countStrong{color:var(--text);font-weight:980}
     .hidden{display:none!important}
 
-    /* Controls */
     .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:10px;}
     .controls .pill{flex:1;min-width:220px}
     .ptsBox{display:flex;flex-direction:column;gap:6px;min-width:160px;flex:0 0 auto;}
@@ -102,7 +100,6 @@
     .preset{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
     .preset button{padding:12px 12px;border-radius:14px}
 
-    /* Undo */
     .undoBar{
       margin-top:12px;
       display:flex;
@@ -112,7 +109,6 @@
     }
     .undoBar .pill{flex:1;min-width:220px}
 
-    /* Teams stacked */
     .market{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
     .side{
       border:1px solid var(--line);
@@ -142,13 +138,11 @@
       font-size:18px;
     }
 
-    /* Tight odds row */
     .price{display:flex;align-items:baseline;justify-content:flex-start;gap:12px;margin-top:4px}
     .big{font-size:46px;font-weight:980;letter-spacing:-.4px}
     .side .price .small{display:none;}
     .small{font-size:12px;color:var(--muted);font-weight:950}
 
-    /* Make bet buttons bigger */
     .betBtn{
       width:100%;
       padding:18px 14px;
@@ -156,7 +150,6 @@
       border-radius:16px;
     }
 
-    /* Tiny admin */
     .adminWrap{margin-top:10px; display:flex; justify-content:flex-end;}
     #adminBtn{
       padding:6px 10px;
@@ -166,7 +159,6 @@
     }
     #adminBtn:hover{opacity:.85}
 
-    /* CONFIRM MODAL (big + bold) */
     .modalBackdrop{
       position:fixed; inset:0;
       background:rgba(0,0,0,.60);
@@ -340,7 +332,6 @@
 
             <div class="pill" id="adminMsg" style="margin-top:10px"><strong>Status:</strong> —</div>
           </div>
-
         </div>
       </div>
     </div>
@@ -350,7 +341,7 @@
 
 <!-- CONFIRM MODAL -->
 <div id="confirmBackdrop" class="modalBackdrop" onclick="backdropClick(event)">
-  <div class="modal">
+  <div class="modal" onclick="event.stopPropagation()">
     <h2 class="modalTitle" id="confirmTitle">CONFIRM YOUR WAGER</h2>
     <p class="modalText" id="confirmText">—</p>
     <div class="modalActions">
@@ -361,20 +352,22 @@
 </div>
 
 <script>
-  // ✅ PUT YOUR WEB APP /exec URL HERE
-  const SCRIPT_URL = "https://script.google.com/macros/s/PASTE_YOURS/exec";
+  // ✅ FIXED: Your real Apps Script Web App /exec URL
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzxOVSjxpBDALIibr1bnqDJW7eYYIwlXGW2srhTyJ2KYedOuJkNO_jgDzPOWuDXxf4H3A/exec";
+
+  // Safety warning if someone pastes the placeholder back in
+  if (SCRIPT_URL.includes("PASTE_YOURS")) {
+    alert("SCRIPT_URL is not set. Paste your Apps Script /exec URL into SCRIPT_URL.");
+  }
 
   const $ = (id) => document.getElementById(id);
   let session = { name:"", pin:"" };
 
-  // Countdown: 9:55 AM on 2/27/2026 (viewer local time)
   const LOCK_AT_LOCAL = new Date(2026, 1, 27, 9, 55, 0);
 
-  // confirm state
   let pendingSide = "";
   let teamsCache = { A:"Team A", B:"Team B" };
 
-  // undo state (client timer + backend enforced)
   let lastBetId = "";
   let undoUntil = 0;
   let undoTimer = null;
@@ -521,7 +514,6 @@
     $("betB").classList.toggle("secondary", side !== "B");
   }
 
-  // ---- Confirm modal ----
   function openConfirm(side){
     const pts = Number($("points").value);
     if(!Number.isFinite(pts) || pts <= 0){ alert("Enter points > 0."); return; }
@@ -544,7 +536,6 @@
     await placeBet(side);
   }
 
-  // ---- Undo bar ----
   function showUndo(betId, undoMinutes){
     const mins = Number(undoMinutes || 5);
     lastBetId = betId;
@@ -607,7 +598,6 @@
     renderBalance(res.balance);
   }
 
-  // ---- Betting ----
   async function placeBet(side){
     const pts = Number($("points").value);
     if(!Number.isFinite(pts) || pts <= 0){ alert("Enter points > 0."); return; }
