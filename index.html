@@ -99,6 +99,17 @@
     .preset{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
     .preset button{padding:12px 12px;border-radius:14px}
 
+    /* Undo bar */
+    .undoBar{
+      margin-top:10px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .undoBar .pill{ flex:1; min-width:220px; }
+    .undoBar button{ padding:12px 14px; border-radius:14px; }
+
     /* Teams stacked */
     .market{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
     .side{
@@ -152,6 +163,48 @@
       opacity:.55;
     }
     #adminBtn:hover{opacity:.85}
+
+    /* Confirm modal */
+    .modalOverlay{
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:9999;
+    }
+    .modalOverlay.show{display:flex}
+    .modal{
+      width:min(520px, 100%);
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modalHd{
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      background:rgba(255,255,255,.02);
+    }
+    .modalHd strong{font-size:14px}
+    .modalBd{padding:16px}
+    .modalRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .modalRow button{flex:1; min-width:160px}
+    .xBtn{
+      padding:6px 10px;
+      border-radius:10px;
+      background:rgba(18,26,51,.55);
+      border:1px solid var(--line);
+      font-weight:900;
+      cursor:pointer;
+      color:var(--text);
+    }
 
     @media (max-width:540px){
       main{max-width:900px}
@@ -243,6 +296,12 @@
         <button class="secondary" type="button" onclick="setPts(100)">100</button>
       </div>
 
+      <!-- ✅ Undo bar -->
+      <div id="undoBar" class="undoBar hidden">
+        <div class="pill" id="undoText"><strong>Undo:</strong> —</div>
+        <button class="secondary" type="button" onclick="cancelLastBet()">Cancel bet</button>
+      </div>
+
       <!-- Teams -->
       <div class="market">
         <div class="side">
@@ -318,6 +377,25 @@
 
 </main>
 
+<!-- ✅ Confirm Modal -->
+<div id="confirmOverlay" class="modalOverlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="modalHd">
+      <strong id="confirmTitle">Confirm wager</strong>
+      <button class="xBtn" type="button" onclick="closeConfirm()">✕</button>
+    </div>
+    <div class="modalBd">
+      <div class="pill" id="confirmSummary"><strong>Wager:</strong> —</div>
+      <div class="pill" id="confirmDetails" style="margin-top:10px"><strong>Details:</strong> —</div>
+
+      <div class="modalRow">
+        <button class="secondary" type="button" onclick="closeConfirm()">Cancel</button>
+        <button id="confirmBtn" type="button" onclick="confirmBet()">Place bet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzxOVSjxpBDALIibr1bnqDJW7eYYIwlXGW2srhTyJ2KYedOuJkNO_jgDzPOWuDXxf4H3A/exec";
   const $ = (id) => document.getElementById(id);
@@ -325,7 +403,15 @@
 
   const LOCK_AT_LOCAL = new Date(2026, 1, 27, 9, 55, 0);
 
-  let lastSide = ""; // for active highlight only
+  // ✅ Undo state (5 minutes)
+  let lastBetId = "";
+  let undoUntil = 0;
+  let undoTimer = null;
+
+  // ✅ Confirm state
+  let pendingSide = "";
+  let pendingPts = 0;
+  let teamsCache = { A:"Team A", B:"Team B" };
 
   function setPts(n){ $("points").value = n; }
 
@@ -401,6 +487,7 @@
     showBetting();
     render(res.state);
     renderBalance(res.balance);
+    restoreUndoUI();
   }
 
   async function loginReturningUser(){
@@ -417,6 +504,7 @@
     showBetting();
     render(res.state);
     renderBalance(res.balance);
+    restoreUndoUI();
   }
 
   function logout(){
@@ -426,6 +514,7 @@
     $("returnName").value = "";
     $("returnPin").value = "";
     setAuthMode("returning");
+    hideUndo();
     showAuth();
   }
 
@@ -462,25 +551,160 @@
   }
 
   function setActiveSide(side){
-    lastSide = side;
     $("betA").classList.toggle("active", side === "A");
     $("betB").classList.toggle("active", side === "B");
     $("betA").classList.toggle("secondary", side !== "A");
     $("betB").classList.toggle("secondary", side !== "B");
   }
 
-  async function bet(side){
+  /* ------------------ ✅ Confirm modal flow ------------------ */
+
+  function openConfirm(side){
     const pts = Number($("points").value);
     if(!Number.isFinite(pts) || pts <= 0){ alert("Enter points > 0."); return; }
 
-    setActiveSide(side);
+    pendingSide = side;
+    pendingPts = pts;
 
-    const res = await apiPost({ action:"bet", name:session.name, pin:session.pin, side, points:pts });
-    if(!res.ok){ alert(res.error || "Bet rejected"); await refresh(); return; }
+    const teamName = (side === "A") ? teamsCache.A : teamsCache.B;
 
+    $("confirmSummary").innerHTML = `<strong>Wager:</strong> ${pts} points`;
+    $("confirmDetails").innerHTML =
+      `<strong>Betting on:</strong> ${teamName}<br><strong>As:</strong> ${session.name || "—"}`;
+
+    $("confirmOverlay").classList.add("show");
+    $("confirmOverlay").setAttribute("aria-hidden", "false");
+  }
+
+  function closeConfirm(){
+    $("confirmOverlay").classList.remove("show");
+    $("confirmOverlay").setAttribute("aria-hidden", "true");
+    pendingSide = "";
+    pendingPts = 0;
+  }
+
+  async function confirmBet(){
+    if(!pendingSide) return;
+
+    // show blue highlight immediately
+    setActiveSide(pendingSide);
+
+    // prevent double submit
+    const btn = $("confirmBtn");
+    const old = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Placing…";
+
+    try{
+      const res = await apiPost({
+        action:"bet",
+        name:session.name,
+        pin:session.pin,
+        side:pendingSide,
+        points:pendingPts
+      });
+
+      if(!res.ok){
+        alert(res.error || "Bet rejected");
+        await refresh();
+        return;
+      }
+
+      // ✅ start undo window if backend returned betId
+      if(res.betId) showUndo(res.betId);
+
+      render(res.state);
+      renderBalance(res.balance);
+      closeConfirm();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = old;
+    }
+  }
+
+  // Replace direct betting with confirm step
+  async function bet(side){
+    openConfirm(side);
+  }
+
+  // Close modal when clicking outside card
+  $("confirmOverlay").addEventListener("click", (e) => {
+    if(e.target === $("confirmOverlay")) closeConfirm();
+  });
+  // Escape closes modal
+  window.addEventListener("keydown", (e) => {
+    if(e.key === "Escape" && $("confirmOverlay").classList.contains("show")) closeConfirm();
+  });
+
+  /* ------------------ ✅ Undo (Cancel bet) flow ------------------ */
+
+  function showUndo(betId){
+    lastBetId = betId;
+    undoUntil = Date.now() + (5 * 60 * 1000);
+
+    localStorage.setItem("golfshi_lastBetId", lastBetId);
+    localStorage.setItem("golfshi_undoUntil", String(undoUntil));
+
+    $("undoBar").classList.remove("hidden");
+    tickUndo();
+
+    if(undoTimer) clearInterval(undoTimer);
+    undoTimer = setInterval(tickUndo, 1000);
+  }
+
+  function hideUndo(){
+    $("undoBar").classList.add("hidden");
+    lastBetId = "";
+    undoUntil = 0;
+    localStorage.removeItem("golfshi_lastBetId");
+    localStorage.removeItem("golfshi_undoUntil");
+    if(undoTimer) clearInterval(undoTimer);
+    undoTimer = null;
+  }
+
+  function tickUndo(){
+    const ms = undoUntil - Date.now();
+    if(ms <= 0){
+      hideUndo();
+      return;
+    }
+    const s = Math.floor(ms/1000);
+    const m = String(Math.floor(s/60)).padStart(2,"0");
+    const r = String(s%60).padStart(2,"0");
+    $("undoText").innerHTML = `<strong>Cancel bet:</strong> available for ${m}:${r}`;
+  }
+
+  function restoreUndoUI(){
+    const savedId = localStorage.getItem("golfshi_lastBetId") || "";
+    const savedUntil = Number(localStorage.getItem("golfshi_undoUntil") || "0");
+    if(savedId && savedUntil > Date.now()){
+      lastBetId = savedId;
+      undoUntil = savedUntil;
+      $("undoBar").classList.remove("hidden");
+      tickUndo();
+      if(undoTimer) clearInterval(undoTimer);
+      undoTimer = setInterval(tickUndo, 1000);
+    } else {
+      hideUndo();
+    }
+  }
+
+  async function cancelLastBet(){
+    const betId = lastBetId || (localStorage.getItem("golfshi_lastBetId") || "");
+    const until = Number(localStorage.getItem("golfshi_undoUntil") || "0");
+
+    if(!betId){ alert("No bet to cancel."); return; }
+    if(Date.now() > until){ hideUndo(); alert("Cancel window expired."); return; }
+
+    const res = await apiPost({ action:"cancelbet", name:session.name, pin:session.pin, betId });
+    if(!res.ok){ alert(res.error || "Could not cancel."); return; }
+
+    hideUndo();
     render(res.state);
     renderBalance(res.balance);
   }
+
+  /* ------------------ State refresh / render ------------------ */
 
   async function refresh(){
     try{
@@ -502,6 +726,9 @@
   function render(st){
     const locked = st.locked;
     const teams = st.teams || { A:"Team A", B:"Team B", A_IMG:"", B_IMG:"" };
+
+    // cache team names for confirm modal
+    teamsCache = { A: teams.A, B: teams.B };
 
     $("teamA").textContent = teams.A;
     $("teamB").textContent = teams.B;
@@ -589,6 +816,7 @@
         showBetting();
         render(res.state);
         renderBalance(res.balance);
+        restoreUndoUI();
       } else {
         setAuthMode("returning");
         $("returnName").value = session.name || "";
