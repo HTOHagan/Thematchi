@@ -20,14 +20,18 @@
       color:var(--text);
       min-height:100vh;
     }
+
+    /* More "app rectangle" width */
+    main{max-width:760px;margin:0 auto;padding:0 16px 28px}
+
     header{
-  max-width:900px;
-  margin:0 auto;
-  padding:22px 16px 10px;
-  text-align:center;
-}
-h1{margin:0;font-size:24px; letter-spacing:-.2px}
-.sub{color:var(--muted);font-size:15px;margin-top:6px}
+      max-width:760px;
+      margin:0 auto;
+      padding:22px 16px 10px;
+      text-align:center;
+    }
+    h1{margin:0;font-size:26px; letter-spacing:-.3px}
+    .sub{color:var(--muted);font-size:15px;margin-top:6px}
 
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
@@ -37,16 +41,25 @@ h1{margin:0;font-size:24px; letter-spacing:-.2px}
       overflow:hidden;
       margin-top:14px;
     }
+
+    /* Tight header row (no huge gap) */
     .hd{
       padding:14px 16px;
       border-bottom:1px solid var(--line);
       background:rgba(255,255,255,.02);
-      display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start;
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      gap:10px;
+      flex-wrap:wrap;
     }
+    /* Push "You" pill to the right without stretching the whole row */
+    #userPill{ margin-left:auto; }
+
     .pill{
       font-size:12px;color:var(--muted);
       border:1px solid var(--line);
-      border-radius:999px;
+      border-radius:12px;                /* rectangle instead of capsule */
       padding:7px 10px;
       background:rgba(27,39,80,.55)
     }
@@ -69,7 +82,8 @@ h1{margin:0;font-size:24px; letter-spacing:-.2px}
       border:1px solid var(--line);
       background: linear-gradient(180deg, rgba(42,60,122,.95), rgba(34,52,107,.95));
       color:var(--text);
-      padding:12px;border-radius:12px;
+      padding:14px 14px;                 /* slightly taller tap target */
+      border-radius:14px;
       cursor:pointer;font-weight:900;
     }
     button.secondary{background:rgba(18,26,51,.55)}
@@ -115,11 +129,22 @@ h1{margin:0;font-size:24px; letter-spacing:-.2px}
     .teamName{
       font-weight:950;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      font-size:16px;
     }
 
-    .price{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-    .big{font-size:34px;font-weight:980}
+    /* Tighten the % row — remove "implied" spacing */
+    .price{
+      display:flex;
+      align-items:baseline;
+      justify-content:flex-start;
+      gap:12px;
+      margin-top:4px;
+    }
+    .big{font-size:38px;font-weight:980; letter-spacing:-.4px}
     .small{font-size:12px;color:var(--muted)}
+
+    /* Hide the "implied" label completely */
+    .side .price .small{ display:none; }
 
     /* Compact betting controls */
     .controls{
@@ -134,24 +159,25 @@ h1{margin:0;font-size:24px; letter-spacing:-.2px}
       display:flex;
       flex-direction:column;
       gap:6px;
-      min-width:150px;
+      min-width:160px;
       flex:0 0 auto;
     }
     .ptsBox input{
-      width:150px;
-      padding:10px 10px;
+      width:160px;
+      padding:12px 12px;
       border-radius:12px;
+      font-size:16px;
     }
     .preset{
       display:flex;
-      gap:8px;
+      gap:10px;
       flex-wrap:wrap;
       margin-top:10px;
     }
     .preset button{
-      padding:8px 10px;
+      padding:12px 12px;
       font-weight:900;
-      border-radius:12px;
+      border-radius:14px;
     }
 
     .metaStack{
@@ -169,6 +195,18 @@ h1{margin:0;font-size:24px; letter-spacing:-.2px}
 
     .countStrong{color:var(--text);font-weight:900}
     .hidden{display:none!important}
+
+    /* Mobile: bigger tap targets + less awkward spacing */
+    @media (max-width: 540px){
+      main{max-width:900px} /* let it breathe on phones */
+      header{max-width:900px}
+      h1{font-size:24px}
+      .controls{flex-direction:column; align-items:stretch}
+      .ptsBox{width:100%; min-width:0}
+      .ptsBox input{width:100%; font-size:18px; padding:14px 12px}
+      .preset button{flex:1; min-width:80px}
+      .side button{width:100%; padding:16px 14px; font-size:16px}
+    }
   </style>
 </head>
 
@@ -212,27 +250,23 @@ h1{margin:0;font-size:24px; letter-spacing:-.2px}
 
 <!-- BETTING -->
 <section class="card hidden" id="betCard">
-  <!-- Top header: only Status + You -->
   <div class="hd">
     <div class="pill" id="statusPill"></div>
     <div class="pill" id="userPill"></div>
   </div>
 
   <div class="bd">
-    <!-- Under header: Line + Locks -->
     <div class="metaStack">
       <div class="metaRow">
         <div class="pill" id="linePill"></div>
         <div class="pill" id="countPill"><strong>Market locks:</strong> <span class="countStrong" id="countdown">—</span></div>
       </div>
 
-      <!-- Logout under those -->
       <div class="metaRow">
         <button class="secondary" type="button" onclick="logout()">Log out</button>
       </div>
     </div>
 
-    <!-- Compact controls -->
     <div class="controls">
       <div class="pill" id="maxPill">
         <strong>Max <span id="maxPts">—</span> • Left:</strong> <span id="remaining">—</span>
@@ -252,7 +286,6 @@ h1{margin:0;font-size:24px; letter-spacing:-.2px}
       <button class="secondary" type="button" onclick="setPts(100)">100</button>
     </div>
 
-    <!-- Teams stacked -->
     <div class="market">
       <div class="side">
         <div class="teamHead">
