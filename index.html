@@ -85,25 +85,31 @@
       padding:14px
     }
 
-    /* Team header with avatar */
+    /* Team header + avatar image */
     .teamHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
     .teamLeft{display:flex;align-items:center;gap:10px;min-width:0}
     .avatar{
-      width:34px;height:34px;border-radius:12px;
-      display:grid;place-items:center;
+      width:42px;height:42px;border-radius:16px;
       border:1px solid var(--line);
-      background:
-        radial-gradient(18px 18px at 30% 25%, rgba(255,255,255,.18), rgba(255,255,255,.05)),
-        rgba(20,30,65,.6);
+      background:rgba(20,30,65,.6);
+      overflow:hidden;
+      position:relative;
+      flex:0 0 auto;
+    }
+    .avatar img{
+      width:100%;height:100%;
+      object-fit:cover;
+      display:none;
+    }
+    .avatar span{
+      position:absolute;inset:0;
+      display:grid;place-items:center;
       font-weight:950;
       letter-spacing:.5px;
-      flex:0 0 auto;
     }
     .teamName{
       font-weight:950;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     }
 
     .price{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
@@ -112,7 +118,6 @@
     .preset{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
     .preset button{padding:10px 12px}
 
-    /* Countdown */
     .countStrong{color:var(--text);font-weight:900}
     .hidden{display:none!important}
   </style>
@@ -121,7 +126,7 @@
 <body>
 <header>
   <h1>Golfshi — The Match Odds</h1>
-  <div class="sub">Unc & Ferrier vs Dorrin & Dom</div>
+  <div class="sub" id="matchSubtitle">Loading teams…</div>
 </header>
 
 <main>
@@ -162,7 +167,7 @@
     <div class="pill" id="statusPill"></div>
     <div class="pill" id="userPill"></div>
     <div class="pill" id="linePill"></div>
-    <div class="pill" id="countPill"><strong>Locks:</strong> <span class="countStrong" id="countdown">—</span></div>
+    <div class="pill" id="countPill"><strong>Market locks:</strong> <span class="countStrong" id="countdown">—</span></div>
   </div>
 
   <div class="bd">
@@ -188,7 +193,10 @@
       <div class="side">
         <div class="teamHead">
           <div class="teamLeft">
-            <div class="avatar" id="avA">A</div>
+            <div class="avatar">
+              <img id="imgA" alt="Team A" />
+              <span id="iniA">A</span>
+            </div>
             <div class="teamName" id="teamA">Team A</div>
           </div>
         </div>
@@ -201,7 +209,10 @@
       <div class="side">
         <div class="teamHead">
           <div class="teamLeft">
-            <div class="avatar" id="avB">B</div>
+            <div class="avatar">
+              <img id="imgB" alt="Team B" />
+              <span id="iniB">B</span>
+            </div>
             <div class="teamName" id="teamB">Team B</div>
           </div>
         </div>
@@ -216,14 +227,13 @@
 </main>
 
 <script>
-  // Backend
+  // ✅ Your Apps Script Web App URL (deploy output)
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzpqVGmZXp5FKwwleLFZ6uXwJJmddcPz9DKkKBD-yRl-Xpx1ySfwblQiqpxETzIk6OYCw/exec";
   const $ = (id) => document.getElementById(id);
   let session = { name:"", pin:"" };
 
-  // Countdown target: 9:55 AM on 2/27/2026 (USER'S LOCAL TIME)
-  // If you want this in a specific timezone instead, tell me which one and I’ll lock it to that zone.
-  const LOCK_AT_LOCAL = new Date(2026, 1, 27, 9, 55, 0); // month is 0-based (1 = Feb)
+  // Countdown target: 9:55 AM on 2/27/2026 (viewer local time)
+  const LOCK_AT_LOCAL = new Date(2026, 1, 27, 9, 55, 0); // Feb=1, 9:55 AM
 
   function setPts(n){ $("points").value = n; }
 
@@ -266,7 +276,6 @@
   async function apiPost(payload){
     const form = new URLSearchParams();
     for (const [k,v] of Object.entries(payload)) form.append(k, String(v));
-
     const r = await fetch(SCRIPT_URL, {
       method:"POST",
       headers:{ "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8" },
@@ -291,7 +300,6 @@
 
     session = { name, pin };
     saveSession();
-
     showBetting();
     render(res.state);
     renderBalance(res.balance);
@@ -308,7 +316,6 @@
 
     session = { name, pin };
     saveSession();
-
     showBetting();
     render(res.state);
     renderBalance(res.balance);
@@ -365,20 +372,41 @@
     return letters.join("");
   }
 
+  function setAvatar(imgEl, iniEl, url, fallbackText){
+    if(url){
+      imgEl.src = url;
+      imgEl.style.display = "block";
+      iniEl.style.display = "none";
+
+      imgEl.onerror = () => {
+        imgEl.style.display = "none";
+        iniEl.style.display = "grid";
+        iniEl.textContent = fallbackText;
+      };
+    } else {
+      imgEl.style.display = "none";
+      iniEl.style.display = "grid";
+      iniEl.textContent = fallbackText;
+    }
+  }
+
   function render(st){
     const locked = st.locked;
-    const teams = st.teams || { A:"Team A", B:"Team B" };
+    const teams = st.teams || { A:"Team A", B:"Team B", A_IMG:"", B_IMG:"" };
 
     $("teamA").textContent = teams.A;
     $("teamB").textContent = teams.B;
+    $("matchSubtitle").textContent = `${teams.A} vs ${teams.B}`;
 
-    $("avA").textContent = initialsFromTeamName(teams.A);
-    $("avB").textContent = initialsFromTeamName(teams.B);
+    const iniA = initialsFromTeamName(teams.A);
+    const iniB = initialsFromTeamName(teams.B);
+
+    setAvatar($("imgA"), $("iniA"), teams.A_IMG, iniA);
+    setAvatar($("imgB"), $("iniB"), teams.B_IMG, iniB);
 
     $("statusPill").innerHTML = `<strong>Status:</strong> ${locked ? "LOCKED" : "OPEN"}`;
     $("userPill").innerHTML = `<strong>You:</strong> ${session.name || "—"}`;
 
-    // Odds line
     const o = st.odds;
     const t = st.totals;
 
@@ -400,11 +428,9 @@
     const h = Math.floor((totalSec % 86400) / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
     const s = totalSec % 60;
-
     const hh = String(h).padStart(2,"0");
     const mm = String(m).padStart(2,"0");
     const ss = String(s).padStart(2,"0");
-
     return d > 0 ? `${d}d ${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`;
   }
 
@@ -413,7 +439,6 @@
     $("countdown").textContent = fmtCountdown(ms);
   }
 
-  // Boot
   (async function boot(){
     setAuthMode("new");
     showAuth();
@@ -429,17 +454,21 @@
         render(res.state);
         renderBalance(res.balance);
       } else {
-        // saved creds bad -> show returning mode
         setAuthMode("returning");
         $("returnName").value = session.name || "";
         $("returnPin").value = "";
         clearSession();
         showAuth();
       }
+    } else {
+      // show team names/pics even before login
+      try{
+        const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
+        if(st.ok) render(st);
+      }catch(e){}
     }
   })();
 
-  // Auto-refresh when logged in
   setInterval(()=>{ if(!$("betCard").classList.contains("hidden")) refresh(); }, 5000);
 </script>
 </body>
