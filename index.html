@@ -48,6 +48,7 @@
     }
     .pill strong{color:var(--text)}
     .bd{padding:16px}
+
     label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
     input,button{font:inherit}
     input{
@@ -59,6 +60,7 @@
     }
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .row>*{flex:1;min-width:200px}
+
     button{
       border:1px solid var(--line);
       background: linear-gradient(180deg, rgba(42,60,122,.95), rgba(34,52,107,.95));
@@ -75,8 +77,8 @@
       font-weight:950;font-size:16px
     }
 
-    .market{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
-    @media(max-width:540px){.market{grid-template-columns:1fr}}
+    /* Teams stacked vertically */
+    .market{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
 
     .side{
       border:1px solid var(--line);
@@ -114,8 +116,52 @@
     .price{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
     .big{font-size:34px;font-weight:980}
     .small{font-size:12px;color:var(--muted)}
-    .preset{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
-    .preset button{padding:10px 12px}
+
+    /* Compact betting controls */
+    .controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:flex-end;
+      margin-top:10px;
+    }
+    .controls .pill{flex:1;min-width:220px}
+    .ptsBox{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width:150px;
+      flex:0 0 auto;
+    }
+    .ptsBox input{
+      width:150px;
+      padding:10px 10px;
+      border-radius:12px;
+    }
+    .preset{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .preset button{
+      padding:8px 10px;
+      font-weight:900;
+      border-radius:12px;
+    }
+
+    .metaStack{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:12px;
+    }
+    .metaRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
 
     .countStrong{color:var(--text);font-weight:900}
     .hidden{display:none!important}
@@ -129,6 +175,7 @@
 </header>
 
 <main>
+<!-- AUTH -->
 <section class="card" id="authCard">
   <div class="hd">
     <div class="pill"><strong>Step 1:</strong> Sign in</div>
@@ -159,25 +206,40 @@
   </div>
 </section>
 
+<!-- BETTING -->
 <section class="card hidden" id="betCard">
+  <!-- Top header: only Status + You -->
   <div class="hd">
     <div class="pill" id="statusPill"></div>
     <div class="pill" id="userPill"></div>
-    <div class="pill" id="linePill"></div>
-    <div class="pill" id="countPill"><strong>Market locks:</strong> <span class="countStrong" id="countdown">—</span></div>
   </div>
 
   <div class="bd">
-    <div class="row">
-      <div class="pill">
-        <strong>You can bet up to:</strong>
-        <span id="remaining">—</span> more points (max <span id="maxPts">—</span>)
+    <!-- Under header: Line + Locks -->
+    <div class="metaStack">
+      <div class="metaRow">
+        <div class="pill" id="linePill"></div>
+        <div class="pill" id="countPill"><strong>Market locks:</strong> <span class="countStrong" id="countdown">—</span></div>
       </div>
-      <button class="secondary" type="button" onclick="logout()">Log out</button>
+
+      <!-- Logout under those -->
+      <div class="metaRow">
+        <button class="secondary" type="button" onclick="logout()">Log out</button>
+      </div>
     </div>
 
-    <label style="margin-top:12px">Bet points</label>
-    <input id="points" type="number" min="1" value="10" />
+    <!-- Compact controls -->
+    <div class="controls">
+      <div class="pill" id="maxPill">
+        <strong>Max <span id="maxPts">—</span> • Left:</strong> <span id="remaining">—</span>
+      </div>
+
+      <div class="ptsBox">
+        <label style="margin:0">Points</label>
+        <input id="points" type="number" min="1" value="10" />
+      </div>
+    </div>
+
     <div class="preset">
       <button class="secondary" type="button" onclick="setPts(5)">5</button>
       <button class="secondary" type="button" onclick="setPts(10)">10</button>
@@ -186,6 +248,7 @@
       <button class="secondary" type="button" onclick="setPts(100)">100</button>
     </div>
 
+    <!-- Teams stacked -->
     <div class="market">
       <div class="side">
         <div class="teamHead">
@@ -197,10 +260,11 @@
             <div class="teamName" id="teamA">Team A</div>
           </div>
         </div>
-
         <div class="price"><div class="big" id="pA">—</div><div class="small">implied</div></div>
         <div class="small" id="ptsA">—</div>
-        <button id="betA" type="button" onclick="bet('A')">Bet on A</button>
+        <div style="margin-top:12px">
+          <button id="betA" type="button" onclick="bet('A')">Bet on A</button>
+        </div>
       </div>
 
       <div class="side">
@@ -213,10 +277,11 @@
             <div class="teamName" id="teamB">Team B</div>
           </div>
         </div>
-
         <div class="price"><div class="big" id="pB">—</div><div class="small">implied</div></div>
         <div class="small" id="ptsB">—</div>
-        <button id="betB" class="secondary" type="button" onclick="bet('B')">Bet on B</button>
+        <div style="margin-top:12px">
+          <button id="betB" class="secondary" type="button" onclick="bet('B')">Bet on B</button>
+        </div>
       </div>
     </div>
   </div>
@@ -224,14 +289,12 @@
 </main>
 
 <script>
-  // ✅ Your Apps Script Web App URL (deploy output)
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzxOVSjxpBDALIibr1bnqDJW7eYYIwlXGW2srhTyJ2KYedOuJkNO_jgDzPOWuDXxf4H3A/exec";
-
   const $ = (id) => document.getElementById(id);
   let session = { name:"", pin:"" };
 
-  // Countdown target: 9:55 AM on 2/27/2026 (viewer local time)
-  const LOCK_AT_LOCAL = new Date(2026, 1, 27, 9, 55, 0); // Feb=1, 9:55 AM
+  // Countdown: 9:55 AM on 2/27/2026 (viewer local time)
+  const LOCK_AT_LOCAL = new Date(2026, 1, 27, 9, 55, 0);
 
   function setPts(n){ $("points").value = n; }
 
@@ -264,13 +327,11 @@
     session = { name:"", pin:"" };
   }
 
-  // Hardened: prevents "stuck on new user" if an element is missing
   function setAuthMode(mode){
     const newPanel = $("newUserPanel");
     const retPanel = $("returningUserPanel");
     const newBtn   = $("modeNewBtn");
     const retBtn   = $("modeReturningBtn");
-
     if(!newPanel || !retPanel || !newBtn || !retBtn) return;
 
     const isNew = (mode === "new");
@@ -412,7 +473,6 @@
 
     const iniA = initialsFromTeamName(teams.A);
     const iniB = initialsFromTeamName(teams.B);
-
     setAvatar($("imgA"), $("iniA"), teams.A_IMG, iniA);
     setAvatar($("imgB"), $("iniB"), teams.B_IMG, iniB);
 
@@ -421,7 +481,6 @@
 
     const o = st.odds;
     const t = st.totals;
-
     $("linePill").innerHTML = `<strong>Line:</strong> ${Math.round(o.pA*100)}/${Math.round(o.pB*100)}`;
 
     $("pA").textContent = Math.round(o.pA*100) + "%";
@@ -452,7 +511,6 @@
   }
 
   (async function boot(){
-    // Default to Returning user so nobody feels "stuck on new user"
     setAuthMode("returning");
     showAuth();
 
@@ -474,7 +532,6 @@
         showAuth();
       }
     } else {
-      // Show team names/pics even before login
       try{
         const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
         if(st.ok) render(st);
