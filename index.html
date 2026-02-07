@@ -85,7 +85,6 @@
       padding:14px
     }
 
-    /* Team header + avatar image */
     .teamHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
     .teamLeft{display:flex;align-items:center;gap:10px;min-width:0}
     .avatar{
@@ -130,7 +129,6 @@
 </header>
 
 <main>
-<!-- AUTH -->
 <section class="card" id="authCard">
   <div class="hd">
     <div class="pill"><strong>Step 1:</strong> Sign in</div>
@@ -139,8 +137,8 @@
   <div class="bd">
     <label>Choose:</label>
     <div class="seg">
-      <button id="modeNewBtn" class="segBtn" onclick="setAuthMode('new')">New user</button>
-      <button id="modeReturningBtn" class="segBtn secondary" onclick="setAuthMode('returning')">Returning user</button>
+      <button id="modeNewBtn" class="segBtn" type="button" onclick="setAuthMode('new')">New user</button>
+      <button id="modeReturningBtn" class="segBtn secondary" type="button" onclick="setAuthMode('returning')">Returning user</button>
     </div>
 
     <div id="newUserPanel" style="margin-top:14px">
@@ -148,7 +146,7 @@
       <input id="newName" placeholder="Enter your name" autocomplete="name" />
       <label style="margin-top:10px">PIN (4+ chars)</label>
       <input id="newPin" type="password" placeholder="Enter PIN" autocomplete="new-password" />
-      <button style="margin-top:12px" onclick="registerNewUser()">Create account</button>
+      <button style="margin-top:12px" type="button" onclick="registerNewUser()">Create account</button>
     </div>
 
     <div id="returningUserPanel" class="hidden" style="margin-top:14px">
@@ -156,12 +154,11 @@
       <input id="returnName" placeholder="Enter your name" autocomplete="name" />
       <label style="margin-top:10px">PIN</label>
       <input id="returnPin" type="password" placeholder="Enter PIN" autocomplete="current-password" />
-      <button style="margin-top:12px" onclick="loginReturningUser()">Login</button>
+      <button style="margin-top:12px" type="button" onclick="loginReturningUser()">Login</button>
     </div>
   </div>
 </section>
 
-<!-- BETTING -->
 <section class="card hidden" id="betCard">
   <div class="hd">
     <div class="pill" id="statusPill"></div>
@@ -176,17 +173,17 @@
         <strong>You can bet up to:</strong>
         <span id="remaining">—</span> more points (max <span id="maxPts">—</span>)
       </div>
-      <button class="secondary" onclick="logout()">Log out</button>
+      <button class="secondary" type="button" onclick="logout()">Log out</button>
     </div>
 
     <label style="margin-top:12px">Bet points</label>
     <input id="points" type="number" min="1" value="10" />
     <div class="preset">
-      <button class="secondary" onclick="setPts(5)">5</button>
-      <button class="secondary" onclick="setPts(10)">10</button>
-      <button class="secondary" onclick="setPts(20)">20</button>
-      <button class="secondary" onclick="setPts(50)">50</button>
-      <button class="secondary" onclick="setPts(100)">100</button>
+      <button class="secondary" type="button" onclick="setPts(5)">5</button>
+      <button class="secondary" type="button" onclick="setPts(10)">10</button>
+      <button class="secondary" type="button" onclick="setPts(20)">20</button>
+      <button class="secondary" type="button" onclick="setPts(50)">50</button>
+      <button class="secondary" type="button" onclick="setPts(100)">100</button>
     </div>
 
     <div class="market">
@@ -203,7 +200,7 @@
 
         <div class="price"><div class="big" id="pA">—</div><div class="small">implied</div></div>
         <div class="small" id="ptsA">—</div>
-        <button id="betA" onclick="bet('A')">Bet on A</button>
+        <button id="betA" type="button" onclick="bet('A')">Bet on A</button>
       </div>
 
       <div class="side">
@@ -219,7 +216,7 @@
 
         <div class="price"><div class="big" id="pB">—</div><div class="small">implied</div></div>
         <div class="small" id="ptsB">—</div>
-        <button id="betB" class="secondary" onclick="bet('B')">Bet on B</button>
+        <button id="betB" class="secondary" type="button" onclick="bet('B')">Bet on B</button>
       </div>
     </div>
   </div>
@@ -228,7 +225,8 @@
 
 <script>
   // ✅ Your Apps Script Web App URL (deploy output)
-  https://script.google.com/macros/s/AKfycbzxOVSjxpBDALIibr1bnqDJW7eYYIwlXGW2srhTyJ2KYedOuJkNO_jgDzPOWuDXxf4H3A/exec
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzxOVSjxpBDALIibr1bnqDJW7eYYIwlXGW2srhTyJ2KYedOuJkNO_jgDzPOWuDXxf4H3A/exec";
+
   const $ = (id) => document.getElementById(id);
   let session = { name:"", pin:"" };
 
@@ -266,11 +264,26 @@
     session = { name:"", pin:"" };
   }
 
+  // Hardened: prevents "stuck on new user" if an element is missing
   function setAuthMode(mode){
-    $("newUserPanel").classList.toggle("hidden", mode !== "new");
-    $("returningUserPanel").classList.toggle("hidden", mode !== "returning");
-    $("modeNewBtn").classList.toggle("secondary", mode !== "new");
-    $("modeReturningBtn").classList.toggle("secondary", mode !== "returning");
+    const newPanel = $("newUserPanel");
+    const retPanel = $("returningUserPanel");
+    const newBtn   = $("modeNewBtn");
+    const retBtn   = $("modeReturningBtn");
+
+    if(!newPanel || !retPanel || !newBtn || !retBtn) return;
+
+    const isNew = (mode === "new");
+    newPanel.classList.toggle("hidden", !isNew);
+    retPanel.classList.toggle("hidden", isNew);
+    newBtn.classList.toggle("secondary", !isNew);
+    retBtn.classList.toggle("secondary", isNew);
+
+    setTimeout(() => {
+      const focusId = isNew ? "newName" : "returnName";
+      const el = $(focusId);
+      if(el) el.focus();
+    }, 0);
   }
 
   async function apiPost(payload){
@@ -377,7 +390,6 @@
       imgEl.src = url;
       imgEl.style.display = "block";
       iniEl.style.display = "none";
-
       imgEl.onerror = () => {
         imgEl.style.display = "none";
         iniEl.style.display = "grid";
@@ -440,7 +452,8 @@
   }
 
   (async function boot(){
-    setAuthMode("new");
+    // Default to Returning user so nobody feels "stuck on new user"
+    setAuthMode("returning");
     showAuth();
 
     tickCountdown();
@@ -461,7 +474,7 @@
         showAuth();
       }
     } else {
-      // show team names/pics even before login
+      // Show team names/pics even before login
       try{
         const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
         if(st.ok) render(st);
