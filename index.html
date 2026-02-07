@@ -374,7 +374,8 @@
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzxOVSjxpBDALIibr1bnqDJW7eYYIwlXGW2srhTyJ2KYedOuJkNO_jgDzPOWuDXxf4H3A/exec";
   const $ = (id) => document.getElementById(id);
   let session = { name:"", pin:"" };
-
+const AVATAR_A = "https://raw.githubusercontent.com/HTOHagan/Thematchi/9b162ac648b6e77978476d8d388022fdc2caa8bb/unc%20ferrier.png";
+const AVATAR_B = "https://raw.githubusercontent.com/HTOHagan/Thematchi/9b162ac648b6e77978476d8d388022fdc2caa8bb/dom%20doorin.png";
   // Countdown: 9:55 AM on 2/27/2026 (viewer local time)
   const LOCK_AT_LOCAL = new Date(2026, 1, 27, 9, 55, 0);
 
@@ -547,16 +548,17 @@
 
   function render(st){
     const locked = st.locked;
-    const teams = st.teams || { A:"Team A", B:"Team B", A_IMG:"", B_IMG:"" };
+    const teams = st.teams || { A:"Team A", B:"Team B" };
 
     $("teamA").textContent = teams.A;
     $("teamB").textContent = teams.B;
     $("matchSubtitle").textContent = `${teams.A} vs ${teams.B}`;
 
-    const iniA = initialsFromTeamName(teams.A);
-    const iniB = initialsFromTeamName(teams.B);
-    setAvatar($("imgA"), $("iniA"), teams.A_IMG, iniA);
-    setAvatar($("imgB"), $("iniB"), teams.B_IMG, iniB);
+    const aUrl = teams.A_IMG || AVATAR_A;
+const bUrl = teams.B_IMG || AVATAR_B;
+
+setAvatar($("imgA"), $("iniA"), aUrl, iniA);
+setAvatar($("imgB"), $("iniB"), bUrl, iniB);
 
     $("statusPill").innerHTML = `<strong>Status:</strong> ${locked ? "LOCKED" : "OPEN"}`;
     $("userPill").innerHTML = `<strong>You:</strong> ${session.name || "—"}`;
