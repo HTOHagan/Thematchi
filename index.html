@@ -9,6 +9,10 @@
     :root{
       --bg:#0b1020; --text:#e9eeff; --muted:#a8b3d6; --line:rgba(255,255,255,.10);
       --shadow:0 12px 30px rgba(0,0,0,.35); --radius:18px;
+      --good: rgba(56,217,150,.95);
+      --bad:  rgba(255,90,90,.92);
+      --blue1: rgba(80,140,255,.95);
+      --blue2: rgba(60,120,235,.95);
     }
     *{box-sizing:border-box}
     body{
@@ -80,7 +84,7 @@
     button:disabled{opacity:.5;cursor:not-allowed}
 
     button.active{
-      background: linear-gradient(180deg, rgba(80,140,255,.95), rgba(60,120,235,.95));
+      background: linear-gradient(180deg, var(--blue1), var(--blue2));
       border-color: rgba(120,170,255,.45);
     }
 
@@ -159,6 +163,7 @@
     }
     #adminBtn:hover{opacity:.85}
 
+    /* CONFIRM MODAL (big + bold) */
     .modalBackdrop{
       position:fixed; inset:0;
       background:rgba(0,0,0,.60);
@@ -181,6 +186,51 @@
     .modalText{font-size:22px;font-weight:980;margin:0 0 14px 0;line-height:1.35;}
     .modalActions{display:flex;gap:10px;flex-wrap:wrap;}
     .modalActions button{flex:1;min-width:160px;padding:14px 14px;font-weight:980;font-size:18px}
+
+    /* RESULTS CARD */
+    .resultHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .resultTitle{
+      font-size:18px;
+      font-weight:980;
+      margin:0;
+    }
+    .resultBig{
+      font-size:34px;
+      font-weight:980;
+      letter-spacing:-.3px;
+      margin:8px 0 10px 0;
+    }
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(27,39,80,.55);
+      font-weight:980;
+      font-size:13px;
+    }
+    .tag.good{ border-color: rgba(56,217,150,.45); }
+    .tag.bad{  border-color: rgba(255,90,90,.45); }
+    .moneyGood{ color: rgba(120,255,200,.95); }
+    .moneyBad{ color: rgba(255,140,140,.95); }
+    .kv{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 0;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      font-weight:950;
+    }
+    .kv:last-child{border-bottom:none}
+    .kv .k{color:var(--muted);font-weight:900}
 
     @media (max-width:540px){
       .controls{flex-direction:column;align-items:stretch}
@@ -250,6 +300,60 @@
         </div>
       </div>
 
+      <!-- RESULTS (shows only after winner is set) -->
+      <section class="card hidden" id="resultsCard" style="margin-top:14px;">
+        <div class="hd">
+          <div class="resultHeader" style="width:100%">
+            <h2 class="resultTitle" style="margin:0">Match Results</h2>
+            <div id="resultsTag" class="tag">—</div>
+          </div>
+        </div>
+        <div class="bd">
+          <div id="resultsBig" class="resultBig">—</div>
+
+          <div class="kv">
+            <div class="k">Winner</div>
+            <div id="rWinner">—</div>
+          </div>
+          <div class="kv">
+            <div class="k">Losing pool (pot)</div>
+            <div id="rPot">—</div>
+          </div>
+          <div class="kv">
+            <div class="k">Winning pool</div>
+            <div id="rWinPool">—</div>
+          </div>
+          <div class="kv">
+            <div class="k">Payout / point</div>
+            <div id="rPayoutPerPt">—</div>
+          </div>
+
+          <div class="kv">
+            <div class="k">Your winner points</div>
+            <div id="rYourWinPts">—</div>
+          </div>
+          <div class="kv">
+            <div class="k">Your losing points</div>
+            <div id="rYourLosePts">—</div>
+          </div>
+
+          <div class="kv">
+            <div class="k">Your payout</div>
+            <div id="rYourPayout">—</div>
+          </div>
+          <div class="kv">
+            <div class="k">You owe</div>
+            <div id="rYouOwe">—</div>
+          </div>
+          <div class="kv">
+            <div class="k">Net</div>
+            <div id="rNet">—</div>
+          </div>
+
+          <div class="pill" id="rMsg" style="margin-top:12px"><strong>Status:</strong> —</div>
+        </div>
+      </section>
+
       <div class="controls">
         <div class="pill" id="maxPill">
           <strong>Max <span id="maxPts">—</span> • Left:</strong> <span id="remaining">—</span>
@@ -271,7 +375,7 @@
 
       <!-- Undo bar -->
       <div id="undoBar" class="undoBar hidden">
-        <div class="pill" id="undoText"><strong>UNDO BET:</strong> —</div>
+        <div class="pill" id="undoText"><strong>Undo bet:</strong> —</div>
         <button class="secondary" type="button" onclick="cancelLastBet()">Undo bet</button>
       </div>
 
@@ -314,6 +418,7 @@
             <button id="betB" class="betBtn secondary" type="button" onclick="openConfirm('B')">Bet on Team B</button>
           </div>
 
+          <!-- Tiny Admin -->
           <div class="adminWrap">
             <button id="adminBtn" class="secondary" type="button" onclick="toggleAdmin()">Admin</button>
           </div>
@@ -341,7 +446,7 @@
 <!-- CONFIRM MODAL -->
 <div id="confirmBackdrop" class="modalBackdrop" onclick="backdropClick(event)">
   <div class="modal" onclick="event.stopPropagation()">
-    <h2 class="modalTitle">CONFIRM YOUR WAGER</h2>
+    <h2 class="modalTitle" id="confirmTitle">CONFIRM YOUR WAGER</h2>
     <p class="modalText" id="confirmText">—</p>
     <div class="modalActions">
       <button class="secondary" type="button" onclick="closeConfirm()">CANCEL</button>
@@ -351,20 +456,19 @@
 </div>
 
 <script>
-  // ✅ Your real Apps Script Web App /exec URL
+  // ✅ Your Apps Script Web App /exec URL
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzxOVSjxpBDALIibr1bnqDJW7eYYIwlXGW2srhTyJ2KYedOuJkNO_jgDzPOWuDXxf4H3A/exec";
 
   const $ = (id) => document.getElementById(id);
   let session = { name:"", pin:"" };
 
-  // Market lock countdown (viewer local time)
   const LOCK_AT_LOCAL = new Date(2026, 1, 27, 9, 55, 0);
 
   // confirm state
   let pendingSide = "";
   let teamsCache = { A:"Team A", B:"Team B" };
 
-  // undo state (client timer)
+  // undo state
   let lastBetId = "";
   let undoUntil = 0;
   let undoTimer = null;
@@ -413,60 +517,38 @@
     }, 0);
   }
 
-  // ---------- Robust fetch helpers (shows REAL error cause) ----------
-  async function fetchJson(url, options){
-    let resp;
-    try{
-      resp = await fetch(url, { mode:"cors", redirect:"follow", ...options });
-    }catch(err){
-      throw new Error("NETWORK/CORS ERROR: " + (err?.message || String(err)));
-    }
-
-    const text = await resp.text();
-
-    // Try JSON parse; if it isn't JSON, show a helpful error
-    try{
-      return JSON.parse(text);
-    }catch(e){
-      const preview = text.slice(0, 280).replace(/\s+/g, " ").trim();
-      throw new Error(`NON-JSON RESPONSE (HTTP ${resp.status}). First chars: ${preview}`);
-    }
-  }
-
   async function apiPost(payload){
     const form = new URLSearchParams();
     for (const [k,v] of Object.entries(payload)) form.append(k, String(v));
-    return fetchJson(SCRIPT_URL, {
+    const r = await fetch(SCRIPT_URL, {
       method:"POST",
       headers:{ "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8" },
       body: form.toString()
     });
+    return r.json();
   }
 
   async function apiGet(url){
-    return fetchJson(url, { method:"GET" });
+    const r = await fetch(url);
+    return r.json();
   }
 
-  // ---------- Auth ----------
   async function registerNewUser(){
     const name = $("newName").value.trim();
     const pin  = $("newPin").value.trim();
     if(!name){ alert("Enter your name."); return; }
     if(!pin || pin.length < 4){ alert("PIN must be at least 4 characters."); return; }
 
-    try{
-      const res = await apiPost({ action:"register", name, pin });
-      if(!res.ok){ alert(res.error || "Register failed"); return; }
+    const res = await apiPost({ action:"register", name, pin });
+    if(!res.ok){ alert(res.error || "Register failed"); return; }
 
-      session = { name, pin };
-      saveSession();
-      showBetting();
-      render(res.state);
-      renderBalance(res.balance);
-      restoreUndoUI();
-    }catch(err){
-      alert(String(err.message || err));
-    }
+    session = { name, pin };
+    saveSession();
+    showBetting();
+    render(res.state);
+    renderBalance(res.balance);
+    restoreUndoUI();
+    await refreshResults(); // in case winner already set
   }
 
   async function loginReturningUser(){
@@ -475,19 +557,16 @@
     if(!name){ alert("Enter your name."); return; }
     if(!pin){ alert("Enter your PIN."); return; }
 
-    try{
-      const res = await apiPost({ action:"login", name, pin });
-      if(!res.ok){ alert(res.error || "Login failed"); return; }
+    const res = await apiPost({ action:"login", name, pin });
+    if(!res.ok){ alert(res.error || "Login failed"); return; }
 
-      session = { name, pin };
-      saveSession();
-      showBetting();
-      render(res.state);
-      renderBalance(res.balance);
-      restoreUndoUI();
-    }catch(err){
-      alert(String(err.message || err));
-    }
+    session = { name, pin };
+    saveSession();
+    showBetting();
+    render(res.state);
+    renderBalance(res.balance);
+    restoreUndoUI();
+    await refreshResults(); // show results if match ended
   }
 
   function logout(){
@@ -497,10 +576,10 @@
     $("returnName").value = "";
     $("returnPin").value = "";
     hideUndo();
+    hideResults();
     showAuth();
   }
 
-  // ---------- UI helpers ----------
   function initialsFromTeamName(name){
     const s = String(name || "").replace(/&/g, " ").replace(/\s+/g, " ").trim();
     if(!s) return "?";
@@ -539,7 +618,7 @@
     $("betB").classList.toggle("secondary", side !== "B");
   }
 
-  // ---------- Confirm modal ----------
+  // ---- Confirm modal ----
   function openConfirm(side){
     const pts = Number($("points").value);
     if(!Number.isFinite(pts) || pts <= 0){ alert("Enter points > 0."); return; }
@@ -562,7 +641,7 @@
     await placeBet(side);
   }
 
-  // ---------- Undo bar ----------
+  // ---- Undo ----
   function showUndo(betId, undoMinutes){
     const mins = Number(undoMinutes || 5);
     lastBetId = betId;
@@ -617,37 +696,31 @@
     if(!betId){ alert("No bet to undo."); return; }
     if(Date.now() > until){ hideUndo(); alert("Undo window expired."); return; }
 
-    try{
-      const res = await apiPost({ action:"cancelbet", name:session.name, pin:session.pin, betId });
-      if(!res.ok){ alert(res.error || "Could not undo."); return; }
+    const res = await apiPost({ action:"cancelbet", name:session.name, pin:session.pin, betId });
+    if(!res.ok){ alert(res.error || "Could not undo."); return; }
 
-      hideUndo();
-      render(res.state);
-      renderBalance(res.balance);
-    }catch(err){
-      alert(String(err.message || err));
-    }
+    hideUndo();
+    render(res.state);
+    renderBalance(res.balance);
+    await refreshResults();
   }
 
-  // ---------- Betting ----------
+  // ---- Betting ----
   async function placeBet(side){
     const pts = Number($("points").value);
     if(!Number.isFinite(pts) || pts <= 0){ alert("Enter points > 0."); return; }
 
     setActiveSide(side);
 
-    try{
-      const res = await apiPost({ action:"bet", name:session.name, pin:session.pin, side, points:pts });
-      if(!res.ok){ alert(res.error || "Bet rejected"); await refresh(); return; }
+    const res = await apiPost({ action:"bet", name:session.name, pin:session.pin, side, points:pts });
+    if(!res.ok){ alert(res.error || "Bet rejected"); await refresh(); return; }
 
-      const undoMin = res.state?.config?.UNDO_MINUTES || 5;
-      if(res.betId) showUndo(res.betId, undoMin);
+    const undoMin = res.state?.config?.UNDO_MINUTES || 5;
+    if(res.betId) showUndo(res.betId, undoMin);
 
-      render(res.state);
-      renderBalance(res.balance);
-    }catch(err){
-      alert(String(err.message || err));
-    }
+    render(res.state);
+    renderBalance(res.balance);
+    await refreshResults();
   }
 
   async function refresh(){
@@ -659,9 +732,7 @@
         const b = await apiGet(`${SCRIPT_URL}?action=balance&name=${encodeURIComponent(session.name)}&pin=${encodeURIComponent(session.pin)}&ts=${Date.now()}`);
         if(b.ok) renderBalance(b);
       }
-    }catch(e){
-      // keep silent on auto-refresh
-    }
+    }catch(e){}
   }
 
   function renderBalance(b){
@@ -717,6 +788,84 @@
     $("countdown").textContent = fmtCountdown(ms);
   }
 
+  // ---- Results UI ----
+  function hideResults(){
+    $("resultsCard").classList.add("hidden");
+  }
+
+  function fmtMoney(x){
+    const n = Number(x || 0);
+    return "$" + (Math.round(n * 100) / 100).toFixed(2);
+  }
+
+  async function refreshResults(){
+    if(!session.name || !session.pin) return;
+
+    try{
+      const r = await apiGet(
+        `${SCRIPT_URL}?action=results&name=${encodeURIComponent(session.name)}&pin=${encodeURIComponent(session.pin)}&ts=${Date.now()}`
+      );
+
+      if(!r || !r.ok){
+        hideResults();
+        return;
+      }
+
+      if(!r.winner){
+        // winner not set yet
+        hideResults();
+        return;
+      }
+
+      // Show results card
+      $("resultsCard").classList.remove("hidden");
+
+      const winnerSide = r.winner;
+      const winnerName = (winnerSide === "A") ? teamsCache.A : teamsCache.B;
+
+      $("rWinner").textContent = winnerName;
+
+      $("rPot").textContent = `${r.potPts} pts (${fmtMoney(r.potDollars)})`;
+      $("rWinPool").textContent = `${r.winPoolPts} pts`;
+      $("rPayoutPerPt").textContent = `${r.payoutPerPoint}x`;
+
+      $("rYourWinPts").textContent = `${r.userWinnerPts || 0} pts`;
+      $("rYourLosePts").textContent = `${r.userLoserPts || 0} pts`;
+
+      $("rYourPayout").textContent = fmtMoney(r.userPayoutDollars || 0);
+      $("rYouOwe").textContent = fmtMoney(r.oweDollars || 0);
+
+      const net = Number(r.userNetDollars || 0);
+      const netEl = $("rNet");
+      netEl.textContent = fmtMoney(net);
+      netEl.classList.toggle("moneyGood", net > 0);
+      netEl.classList.toggle("moneyBad", net < 0);
+
+      const tag = $("resultsTag");
+      const big = $("resultsBig");
+
+      // Decide winner/loser for user
+      if((r.userWinnerPts || 0) > 0){
+        tag.className = "tag good";
+        tag.textContent = "YOU WON";
+        big.innerHTML = `YOU WIN <span class="moneyGood">${fmtMoney(r.userNetDollars)}</span>`;
+      } else if((r.userLoserPts || 0) > 0){
+        tag.className = "tag bad";
+        tag.textContent = "YOU LOST";
+        big.innerHTML = `YOU OWE <span class="moneyBad">${fmtMoney(r.oweDollars)}</span>`;
+      } else {
+        tag.className = "tag";
+        tag.textContent = "NO BET";
+        big.textContent = "NO BETS PLACED";
+      }
+
+      $("rMsg").innerHTML = `<strong>Status:</strong> ${r.message || "Finalized."}`;
+    }catch(e){
+      hideResults();
+    }
+  }
+
+  // Admin
   function toggleAdmin(){
     const panel = $("adminPanel");
     if(!panel) return;
@@ -732,18 +881,16 @@
     const msg = $("adminMsg");
     if(msg) msg.innerHTML = `<strong>Status:</strong> Setting winner…`;
 
-    try{
-      const res = await apiPost({ action:"setwinner", winner, adminPin });
-      if(!res.ok){
-        if(msg) msg.innerHTML = `<strong>Status:</strong> ${res.error || "Failed"}`;
-        alert(res.error || "Failed");
-        return;
-      }
-      if(msg) msg.innerHTML = `<strong>Status:</strong> Winner set to ${winner}`;
-      await refresh();
-    }catch(err){
-      alert(String(err.message || err));
+    const res = await apiPost({ action:"setwinner", winner, adminPin });
+    if(!res.ok){
+      if(msg) msg.innerHTML = `<strong>Status:</strong> ${res.error || "Failed"}`;
+      alert(res.error || "Failed");
+      return;
     }
+
+    if(msg) msg.innerHTML = `<strong>Status:</strong> Winner set to ${winner}`;
+    await refresh();
+    await refreshResults();
   }
 
   (async function boot(){
@@ -753,35 +900,33 @@
     tickCountdown();
     setInterval(tickCountdown, 1000);
 
-    // Always render market even when logged out
-    try{
-      const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
-      if(st.ok) render(st);
-    }catch(e){
-      $("matchSubtitle").textContent = "Could not load market (check web app access).";
-    }
-
     loadSession();
     if(session.name && session.pin){
-      try{
-        const res = await apiPost({ action:"login", name:session.name, pin:session.pin });
-        if(res.ok){
-          showBetting();
-          render(res.state);
-          renderBalance(res.balance);
-          restoreUndoUI();
-        } else {
-          clearSession();
-          showAuth();
-        }
-      }catch(e){
+      const res = await apiPost({ action:"login", name:session.name, pin:session.pin });
+      if(res.ok){
+        showBetting();
+        render(res.state);
+        renderBalance(res.balance);
+        restoreUndoUI();
+        await refreshResults();
+      } else {
         clearSession();
         showAuth();
       }
+    } else {
+      try{
+        const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
+        if(st.ok) render(st);
+      }catch(e){}
     }
   })();
 
-  setInterval(()=>{ if(!$("betCard").classList.contains("hidden")) refresh(); }, 5000);
+  // refresh loop
+  setInterval(async ()=>{
+    if($("betCard").classList.contains("hidden")) return;
+    await refresh();
+    await refreshResults();
+  }, 5000);
 </script>
 
 </body>
