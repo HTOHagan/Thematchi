@@ -158,7 +158,7 @@
     }
     #adminBtn:hover{opacity:.85}
 
-    /* CONFIRM MODAL (big + bold) */
+    /* CONFIRM MODAL */
     .modalBackdrop{
       position:fixed; inset:0;
       background:rgba(0,0,0,.60);
@@ -264,11 +264,7 @@
         </div>
         <div class="bd">
           <div class="pill" id="resultsHeadline"><strong>—</strong></div>
-
-          <div class="resultGrid" id="resultsGrid">
-            <!-- filled by JS -->
-          </div>
-
+          <div class="resultGrid" id="resultsGrid"></div>
           <div class="pill" id="resultsMsg" style="margin-top:10px"><strong>—</strong></div>
         </div>
       </div>
@@ -365,7 +361,7 @@
 <!-- CONFIRM MODAL -->
 <div id="confirmBackdrop" class="modalBackdrop" onclick="backdropClick(event)">
   <div class="modal" onclick="event.stopPropagation()">
-    <h2 class="modalTitle" id="confirmTitle">CONFIRM YOUR WAGER</h2>
+    <h2 class="modalTitle">CONFIRM YOUR WAGER</h2>
     <p class="modalText" id="confirmText">—</p>
     <div class="modalActions">
       <button class="secondary" type="button" onclick="closeConfirm()">CANCEL</button>
@@ -388,7 +384,7 @@
   let pendingSide = "";
   let teamsCache = { A:"Team A", B:"Team B" };
 
-  // undo state (client timer + backend enforced)
+  // undo state
   let lastBetId = "";
   let undoUntil = 0;
   let undoTimer = null;
@@ -400,7 +396,6 @@
     $("betCard").classList.remove("hidden");
     $("authPill").innerHTML = `<strong>Status:</strong> logged in`;
   }
-
   function showAuth(){
     $("betCard").classList.add("hidden");
     $("authCard").classList.remove("hidden");
@@ -411,14 +406,12 @@
     localStorage.setItem("golfshi_name", session.name);
     localStorage.setItem("golfshi_pin", session.pin);
   }
-
   function loadSession(){
     session = {
       name: localStorage.getItem("golfshi_name") || "",
       pin:  localStorage.getItem("golfshi_pin") || ""
     };
   }
-
   function clearSession(){
     localStorage.removeItem("golfshi_name");
     localStorage.removeItem("golfshi_pin");
@@ -447,7 +440,6 @@
     });
     return r.json();
   }
-
   async function apiGet(url){
     const r = await fetch(url);
     return r.json();
@@ -651,7 +643,6 @@
       if(session.name && session.pin){
         const b = await apiGet(`${SCRIPT_URL}?action=balance&name=${encodeURIComponent(session.name)}&pin=${encodeURIComponent(session.pin)}&ts=${Date.now()}`);
         if(b.ok) renderBalance(b);
-
         await checkResultsAuto();
       }
     }catch(e){}
@@ -663,7 +654,7 @@
   }
 
   function render(st){
-    const locked = st.locked;
+    const locked = !!st.locked;
     const teams = st.teams || { A:"Team A", B:"Team B", A_IMG:"", B_IMG:"" };
     teamsCache = { A: teams.A, B: teams.B };
 
@@ -694,12 +685,12 @@
   }
 
   // ---- Results ----
-  function hideResults(){
-    $("resultsCard").classList.add("hidden");
-  }
+  function hideResults(){ $("resultsCard").classList.add("hidden"); }
 
   function showResults(r){
     $("resultsCard").classList.remove("hidden");
+
+    const fmt = (x)=> (Number(x)||0).toFixed(2);
 
     if(!r.winner){
       $("resultsStatus").innerHTML = `<strong>Status:</strong> NOT SET`;
@@ -710,12 +701,8 @@
     }
 
     $("resultsStatus").innerHTML = `<strong>Status:</strong> FINAL`;
-    $("resultsHeadline").innerHTML =
-      `<strong>WINNER: ${r.winner} • LOSER: ${r.loser}</strong>`;
+    $("resultsHeadline").innerHTML = `<strong>WINNER: ${r.winner} • LOSER: ${r.loser}</strong>`;
 
-    const fmt = (x)=> (Number(x)||0).toFixed(2);
-
-    // Build lines that match your pari-mutuel response
     const lines = [];
 
     lines.push(`<div class="resultLine">
@@ -739,8 +726,6 @@
         <div class="pill"><strong>Your stake:</strong> $${fmt(r.userStakeDollars)}</div>
       </div>`);
       lines.push(`<div class="resultLine">
-        <div class
-              lines.push(`<div class="resultLine">
         <div class="pill"><strong>Net:</strong> $${fmt(r.userNetDollars)}</div>
         <div class="pill"><strong>Message:</strong> ${r.message || ""}</div>
       </div>`);
@@ -792,7 +777,7 @@
     const msg = $("adminMsg");
     if(msg) msg.innerHTML = `<strong>Status:</strong> Setting winner…`;
 
-    // MUST be POST (backend expects doPost action=setwinner)
+    // Backend expects POST: action=setwinner
     const res = await apiPost({ action:"setwinner", winner, adminPin });
 
     if(!res.ok){
@@ -831,7 +816,7 @@
     tickCountdown();
     setInterval(tickCountdown, 1000);
 
-    // preload market display even if not logged in
+    // preload market even if not logged in
     try{
       const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
       if(st.ok) render(st);
@@ -855,5 +840,6 @@
 
   setInterval(()=>{ if(!$("betCard").classList.contains("hidden")) refresh(); }, 5000);
 </script>
+
 </body>
 </html>
