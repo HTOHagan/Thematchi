@@ -35,7 +35,6 @@
       overflow:hidden;
       margin-top:14px;
     }
-
     .hd{
       padding:14px 16px;
       border-bottom:1px solid var(--line);
@@ -159,917 +158,6 @@
     }
     #adminBtn:hover{opacity:.85}
 
-    /* CONFIRM MODAL */
-    .modalBackdrop{
-      position:fixed; inset:0;
-      background:rgba(0,0,0,.60);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      z-index:9999;
-    }
-    .modalBackdrop.show{display:flex}
-    .modal{
-      width:min(560px, 100%);
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:rgba(15,23,48,.96);
-      box-shadow: var(--shadow);
-      padding:18px;
-    }
-    .modalTitle{font-size:26px;font-weight:980;margin:0 0 10px 0;}
-    .modalText{font-size:20px;font-weight:980;margin:0 0 10px 0;line-height:1.35;}
-    .modalMini{
-      margin:0 0 14px 0;
-      font-size:14px;
-      color:var(--muted);
-      font-weight:950;
-      line-height:1.35;
-    }
-    .modalActions{display:flex;gap:10px;flex-wrap:wrap;}
-    .modalActions button{flex:1;min-width:160px;padding:14px 14px;font-weight:980;font-size:18px}
-
-    /* RESULTS */
-    .resultsGrid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
-    .resultsBig{font-size:28px;font-weight:980;letter-spacing:-.2px;}
-    .resultsRow{display:flex;gap:10px;flex-wrap:wrap;}
-    .resultsRow .pill{flex:1;min-width:220px}
-
-    @media (max-width:540px){
-      .controls{flex-direction:column;align-items:stretch}
-      .ptsBox{width:100%;min-width:0}
-      .ptsBox input{width:100%;font-size:24px;padding:14px 12px}
-      .preset button{flex:1;min-width:80px}
-    }
-  </style>
-</head>
-
-<body>
-<header>
-  <h1>Golfshi — The Match Odds</h1>
-  <div class="sub" id="matchSubtitle">Loading teams…</div>
-</header>
-
-<main>
-
-  <!-- AUTH -->
-  <section class="card" id="authCard">
-    <div class="hd">
-      <div class="pill"><strong>Step 1:</strong> Sign in</div>
-      <div class="pill" id="authPill"><strong>Status:</strong> not logged in</div>
-    </div>
-
-    <div class="bd">
-      <label>Choose:</label>
-      <div class="seg">
-        <button id="modeNewBtn" class="segBtn" type="button" onclick="setAuthMode('new')">New user</button>
-        <button id="modeReturningBtn" class="segBtn secondary" type="button" onclick="setAuthMode('returning')">Returning user</button>
-      </div>
-
-      <div id="newUserPanel" style="margin-top:14px">
-        <label>Name</label>
-        <input id="newName" placeholder="Enter your name" autocomplete="name" />
-        <label style="margin-top:10px">PIN (4+ chars)</label>
-        <input id="newPin" type="password" placeholder="Enter PIN" autocomplete="new-password" />
-        <button style="margin-top:12px" type="button" onclick="registerNewUser()">Create account</button>
-      </div>
-
-      <div id="returningUserPanel" class="hidden" style="margin-top:14px">
-        <label>Name</label>
-        <input id="returnName" placeholder="Enter your name" autocomplete="name" />
-        <label style="margin-top:10px">PIN</label>
-        <input id="returnPin" type="password" placeholder="Enter PIN" autocomplete="current-password" />
-        <button style="margin-top:12px" type="button" onclick="loginReturningUser()">Login</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- RESULTS -->
-  <section class="card hidden" id="resultsCard">
-    <div class="hd">
-      <div class="pill"><strong>Results</strong></div>
-      <div class="pill" id="resultsPill"><strong>Status:</strong> waiting</div>
-      <div class="pill" id="resultsUserPill"><strong>You:</strong> —</div>
-    </div>
-    <div class="bd">
-      <div class="resultsGrid">
-        <div class="resultsBig" id="resultsTitle">Winner not set yet.</div>
-
-        <div class="resultsRow">
-          <div class="pill" id="poolPill"><strong>Pot:</strong> —</div>
-          <div class="pill" id="payoutPill"><strong>Payout per point:</strong> —</div>
-        </div>
-
-        <div class="resultsRow">
-          <div class="pill" id="youStakePill"><strong>Your stake:</strong> —</div>
-          <div class="pill" id="youPayoutPill"><strong>Your payout:</strong> —</div>
-        </div>
-
-        <div class="resultsRow">
-          <div class="pill" id="youNetPill"><strong>Your net:</strong> —</div>
-          <div class="pill" id="youOwePill"><strong>You owe:</strong> —</div>
-        </div>
-
-        <div class="pill" id="resultsMsg"><strong>Note:</strong> —</div>
-
-        <button class="secondary" type="button" onclick="hideResults()">Back to odds</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- BETTING -->
-  <section class="card hidden" id="betCard">
-    <div class="hd">
-      <div class="pill" id="statusPill"></div>
-      <div class="pill" id="userPill"></div>
-    </div>
-
-    <div class="bd">
-      <div class="metaStack">
-        <div class="metaRow">
-          <div class="pill" id="linePill"></div>
-          <div class="pill" id="countPill"><strong>Market locks:</strong> <span class="countStrong" id="countdown">—</span></div>
-        </div>
-
-        <div class="metaRow">
-          <button class="secondary" type="button" onclick="logout()">Log out</button>
-          <button class="secondary" type="button" onclick="openResults()">View results</button>
-        </div>
-      </div>
-
-      <div class="controls">
-        <div class="pill" id="maxPill">
-          <strong>Max <span id="maxPts">—</span> • Left:</strong> <span id="remaining">—</span>
-        </div>
-
-        <div class="ptsBox">
-          <label style="margin:0">Points</label>
-          <input id="points" type="number" min="1" value="10" />
-        </div>
-      </div>
-
-      <div class="preset">
-        <button class="secondary" type="button" onclick="setPts(5)">5</button>
-        <button class="secondary" type="button" onclick="setPts(10)">10</button>
-        <button class="secondary" type="button" onclick="setPts(20)">20</button>
-        <button class="secondary" type="button" onclick="setPts(50)">50</button>
-        <button class="secondary" type="button" onclick="setPts(100)">100</button>
-      </div>
-
-      <div id="undoBar" class="undoBar hidden">
-        <div class="pill" id="undoText"><strong>Undo bet:</strong> —</div>
-        <button class="secondary" type="button" onclick="cancelLastBet()">Undo bet</button>
-      </div>
-
-      <div class="market">
-        <div class="side">
-          <div class="teamHead">
-            <div class="teamLeft">
-              <div class="avatar">
-                <img id="imgA" alt="Team A" />
-                <span id="iniA">A</span>
-              </div>
-              <div class="teamName" id="teamA">Team A</div>
-            </div>
-          </div>
-
-          <div class="price"><div class="big" id="pA">—</div><div class="small">implied</div></div>
-          <div class="small" id="ptsA">—</div>
-
-          <div style="margin-top:12px">
-            <button id="betA" class="betBtn" type="button" onclick="openConfirm('A')">Bet on Team A</button>
-          </div>
-        </div>
-
-        <div class="side">
-          <div class="teamHead">
-            <div class="teamLeft">
-              <div class="avatar">
-                <img id="imgB" alt="Team B" />
-                <span id="iniB">B</span>
-              </div>
-              <div class="teamName" id="teamB">Team B</div>
-            </div>
-          </div>
-
-          <div class="price"><div class="big" id="pB">—</div><div class="small">implied</div></div>
-          <div class="small" id="ptsB">—</div>
-
-          <div style="margin-top:12px">
-            <button id="betB" class="betBtn secondary" type="button" onclick="openConfirm('B')">Bet on Team B</button>
-          </div>
-
-          <div class="adminWrap">
-            <button id="adminBtn" class="secondary" type="button" onclick="toggleAdmin()">Admin</button>
-          </div>
-
-          <div id="adminPanel" class="hidden" style="margin-top:10px">
-            <div class="pill" style="margin-bottom:10px"><strong>Admin</strong></div>
-
-            <label>Admin PIN</label>
-            <input id="adminPin" type="password" placeholder="Admin PIN" autocomplete="off" />
-
-            <div class="preset" style="margin-top:10px">
-              <button type="button" onclick="setWinner('A')">Set Winner: A</button>
-              <button type="button" onclick="setWinner('B')">Set Winner: B</button>
-            </div>
-
-            <div class="pill" id="adminMsg" style="margin-top:10px"><strong>Status:</strong> —</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-</main>
-
-<!-- CONFIRM MODAL -->
-<div id="confirmBackdrop" class="modalBackdrop" onclick="backdropClick(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <h2 class="modalTitle" id="confirmTitle">CONFIRM YOUR WAGER</h2>
-    <p class="modalText" id="confirmText">—</p>
-    <p class="modalMini" id="confirmMini">—</p>
-    <div class="modalActions">
-      <button class="secondary" type="button" onclick="closeConfirm()">CANCEL</button>
-      <button type="button" onclick="confirmBet()">CONFIRM</button>
-    </div>
-  </div>
-</div>
-
-<script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzxOVSjxpBDALIibr1bnqDJW7eYYIwlXGW2srhTyJ2KYedOuJkNO_jgDzPOWuDXxf4H3A/exec";
-  const $ = (id) => document.getElementById(id);
-
-  let session = { name:"", pin:"" };
-  const LOCK_AT_LOCAL = new Date(2026, 1, 27, 9, 55, 0);
-
-  let pendingSide = "";
-  let teamsCache = { A:"Team A", B:"Team B" };
-  let totalsCache = { ptsA:0, ptsB:0, total:0 };
-  let dollarsPerPoint = 1;
-
-  let lastBetId = "";
-  let undoUntil = 0;
-  let undoTimer = null;
-
-  function setPts(n){ $("points").value = n; }
-
-  function showBetting(){
-    $("authCard").classList.add("hidden");
-    $("resultsCard").classList.add("hidden");
-    $("betCard").classList.remove("hidden");
-    $("authPill").innerHTML = `<strong>Status:</strong> logged in`;
-  }
-  function showAuth(){
-    $("betCard").classList.add("hidden");
-    $("resultsCard").classList.add("hidden");
-    $("authCard").classList.remove("hidden");
-    $("authPill").innerHTML = `<strong>Status:</strong> not logged in`;
-  }
-  function showResults(){
-    $("authCard").classList.add("hidden");
-    $("betCard").classList.add("hidden");
-    $("resultsCard").classList.remove("hidden");
-  }
-  function hideResults(){ showBetting(); }
-
-  function saveSession(){
-    localStorage.setItem("golfshi_name", session.name);
-    localStorage.setItem("golfshi_pin", session.pin);
-  }
-  function loadSession(){
-    session = {
-      name: localStorage.getItem("golfshi_name") || "",
-      pin:  localStorage.getItem("golfshi_pin") || ""
-    };
-  }
-  function clearSession(){
-    localStorage.removeItem("golfshi_name");
-    localStorage.removeItem("golfshi_pin");
-    session = { name:"", pin:"" };
-  }
-
-  function setAuthMode(mode){
-    const isNew = (mode === "new");
-    $("newUserPanel").classList.toggle("hidden", !isNew);
-    $("returningUserPanel").classList.toggle("hidden", isNew);
-    $("modeNewBtn").classList.toggle("secondary", !isNew);
-    $("modeReturningBtn").classList.toggle("secondary", isNew);
-    setTimeout(() => {
-      const el = $(isNew ? "newName" : "returnName");
-      if(el) el.focus();
-    }, 0);
-  }
-
-  async function apiPost(payload){
-    const form = new URLSearchParams();
-    for (const [k,v] of Object.entries(payload)) form.append(k, String(v));
-    const r = await fetch(SCRIPT_URL, {
-      method:"POST",
-      headers:{ "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8" },
-      body: form.toString()
-    });
-    return r.json();
-  }
-  async function apiGet(url){
-    const r = await fetch(url);
-    return r.json();
-  }
-
-  async function registerNewUser(){
-    const name = $("newName").value.trim();
-    const pin  = $("newPin").value.trim();
-    if(!name){ alert("Enter your name."); return; }
-    if(!pin || pin.length < 4){ alert("PIN must be at least 4 characters."); return; }
-
-    const res = await apiPost({ action:"register", name, pin });
-    if(!res.ok){ alert(res.error || "Register failed"); return; }
-
-    session = { name, pin };
-    saveSession();
-    showBetting();
-    render(res.state);
-    renderBalance(res.balance);
-    restoreUndoUI();
-    await maybeAutoShowResults();
-  }
-
-  async function loginReturningUser(){
-    const name = $("returnName").value.trim();
-    const pin  = $("returnPin").value.trim();
-    if(!name){ alert("Enter your name."); return; }
-    if(!pin){ alert("Enter your PIN."); return; }
-
-    const res = await apiPost({ action:"login", name, pin });
-    if(!res.ok){ alert(res.error || "Login failed"); return; }
-
-    session = { name, pin };
-    saveSession();
-    showBetting();
-    render(res.state);
-    renderBalance(res.balance);
-    restoreUndoUI();
-    await maybeAutoShowResults();
-  }
-
-  function logout(){
-    clearSession();
-    $("newName").value = "";
-    $("newPin").value = "";
-    $("returnName").value = "";
-    $("returnPin").value = "";
-    hideUndo();
-    showAuth();
-  }
-
-  function initialsFromTeamName(name){
-    const s = String(name || "").replace(/&/g, " ").replace(/\s+/g, " ").trim();
-    if(!s) return "?";
-    const parts = s.split(" ").filter(Boolean);
-    const letters = [];
-    for(const p of parts){
-      if(p.toLowerCase() === "and" || p === "vs" || p === "v") continue;
-      letters.push(p[0].toUpperCase());
-      if(letters.length >= 2) break;
-    }
-    if(letters.length === 1 && parts.length > 1) letters.push(parts[1][0].toUpperCase());
-    return letters.join("");
-  }
-
-  function setAvatar(imgEl, iniEl, url, fallbackText){
-    if(url){
-      imgEl.src = url;
-      imgEl.style.display = "block";
-      iniEl.style.display = "none";
-      imgEl.onerror = () => {
-        imgEl.style.display = "none";
-        iniEl.style.display = "grid";
-        iniEl.textContent = fallbackText;
-      };
-    } else {
-      imgEl.style.display = "none";
-      iniEl.style.display = "grid";
-      iniEl.textContent = fallbackText;
-    }
-  }
-
-  function setActiveSide(side){
-    $("betA").classList.toggle("active", side === "A");
-    $("betB").classList.toggle("active", side === "B");
-    $("betA").classList.toggle("secondary", side !== "A");
-    $("betB").classList.toggle("secondary", side !== "B");
-  }
-
-  function money(n){
-    const x = Number(n);
-    if(!Number.isFinite(x)) return "$0.00";
-    return "$" + x.toFixed(2);
-  }
-
-  function estimateParimutuel(side, pts){
-    const a = Number(totalsCache.ptsA || 0);
-    const b = Number(totalsCache.ptsB || 0);
-
-    const winPool = (side === "A") ? (a + pts) : (b + pts);
-    const potPts  = (side === "A") ? b : a;
-
-    const payoutPerPoint = (winPool > 0) ? (potPts / winPool) : 0;
-    const payoutPts = pts * payoutPerPoint;
-
-    const payoutDollars = payoutPts * dollarsPerPoint;
-    const stakeDollars  = pts * dollarsPerPoint;
-    const netDollars    = payoutDollars - stakeDollars;
-
-    return { potPts, winPool, payoutPerPoint, payoutPts, payoutDollars, stakeDollars, netDollars };
-  }
-
-  function openConfirm(side){
-    const pts = Number($("points").value);
-    if(!Number.isFinite(pts) || pts <= 0){ alert("Enter points > 0."); return; }
-
-    pendingSide = side;
-    const team = (side === "A") ? teamsCache.A : teamsCache.B;
-    $("confirmText").textContent = `YOU ARE BETTING ${pts} POINT(S) ON ${team}.`;
-
-    const est = estimateParimutuel(side, pts);
-    $("confirmMini").textContent =
-      `LIVE ESTIMATE (PARI-MUTUEL): POT ${est.potPts} PTS • EST PAYOUT ${money(est.payoutDollars)} • EST NET ${money(est.netDollars)}. ` +
-      `NET = PAYOUT - STAKE. (ESTIMATE UPDATES AS OTHERS BET.)`;
-
-    $("confirmBackdrop").classList.add("show");
-  }
-  function closeConfirm(){
-    pendingSide = "";
-    $("confirmBackdrop").classList.remove("show");
-  }
-  function backdropClick(e){
-    if(e.target && e.target.id === "confirmBackdrop") closeConfirm();
-  }
-  async function confirmBet(){
-    const side = pendingSide;
-    if(!side) return;
-    closeConfirm();
-    await placeBet(side);
-  }
-
-  function showUndo(betId, undoMinutes){
-    const mins = Number(undoMinutes || 5);
-    lastBetId = betId;
-    undoUntil = Date.now() + (Math.max(1, mins) * 60 * 1000);
-
-    localStorage.setItem("golfshi_lastBetId", lastBetId);
-    localStorage.setItem("golfshi_undoUntil", String(undoUntil));
-
-    $("undoBar").classList.remove("hidden");
-    tickUndo();
-    if(undoTimer) clearInterval(undoTimer);
-    undoTimer = setInterval(tickUndo, 1000);
-  }
-  function hideUndo(){
-    $("undoBar").classList.add("hidden");
-    lastBetId = "";
-    undoUntil = 0;
-    localStorage.removeItem("golfshi_lastBetId");
-    localStorage.removeItem("golfshi_undoUntil");
-    if(undoTimer) clearInterval(undoTimer);
-    undoTimer = null;
-  }
-  function tickUndo(){
-    const ms = undoUntil - Date.now();
-    if(ms <= 0){ hideUndo(); return; }
-    const s = Math.floor(ms/1000);
-    const m = String(Math.floor(s/60)).padStart(2,"0");
-    const r = String(s%60).padStart(2,"0");
-    $("undoText").innerHTML = `<strong>UNDO BET:</strong> ${m}:${r} LEFT`;
-  }
-  function restoreUndoUI(){
-    const savedId = localStorage.getItem("golfshi_lastBetId") || "";
-    const savedUntil = Number(localStorage.getItem("golfshi_undoUntil") || "0");
-    if(savedId && savedUntil > Date.now()){
-      lastBetId = savedId;
-      undoUntil = savedUntil;
-      $("undoBar").classList.remove("hidden");
-      tickUndo();
-      if(undoTimer) clearInterval(undoTimer);
-      undoTimer = setInterval(tickUndo, 1000);
-    } else {
-      hideUndo();
-    }
-  }
-
-  async function cancelLastBet(){
-    const betId = lastBetId || (localStorage.getItem("golfshi_lastBetId") || "");
-    const until = Number(localStorage.getItem("golfshi_undoUntil") || "0");
-    if(!betId){ alert("No bet to undo."); return; }
-    if(Date.now() > until){ hideUndo(); alert("Undo window expired."); return; }
-
-    const res = await apiPost({ action:"cancelbet", name:session.name, pin:session.pin, betId });
-    if(!res.ok){ alert(res.error || "Could not undo."); return; }
-
-    hideUndo();
-    render(res.state);
-    renderBalance(res.balance);
-  }
-
-  async function placeBet(side){
-    const pts = Number($("points").value);
-    if(!Number.isFinite(pts) || pts <= 0){ alert("Enter points > 0."); return; }
-
-    setActiveSide(side);
-
-    const res = await apiPost({ action:"bet", name:session.name, pin:session.pin, side, points:pts });
-    if(!res.ok){ alert(res.error || "Bet rejected"); await refresh(); return; }
-
-    const undoMin = res.state?.config?.UNDO_MINUTES || 5;
-    if(res.betId) showUndo(res.betId, undoMin);
-
-    render(res.state);
-    renderBalance(res.balance);
-  }
-
-  async function refresh(){
-    try{
-      const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
-      if(st.ok) render(st);
-
-      if(session.name && session.pin){
-        const b = await apiGet(`${SCRIPT_URL}?action=balance&name=${encodeURIComponent(session.name)}&pin=${encodeURIComponent(session.pin)}&ts=${Date.now()}`);
-        if(b.ok) renderBalance(b);
-      }
-    }catch(e){}
-  }
-
-  function renderBalance(b){
-    $("remaining").textContent = b.remaining;
-    $("maxPts").textContent = b.maxPts;
-  }
-
-  function render(st){
-    const locked = st.locked;
-    dollarsPerPoint = Number(st?.config?.DOLLARS_PER_POINT || 1);
-
-    const teams = st.teams || { A:"Team A", B:"Team B", A_IMG:"", B_IMG:"" };
-    teamsCache = { A: teams.A, B: teams.B };
-
-    totalsCache = st.totals || { ptsA:0, ptsB:0, total:0 };
-
-    $("teamA").textContent = teams.A;
-    $("teamB").textContent = teams.B;
-    $("matchSubtitle").textContent = `${teams.A} vs ${teams.B}`;
-
-    setAvatar($("imgA"), $("iniA"), teams.A_IMG, initialsFromTeamName(teams.A));
-    setAvatar($("imgB"), $("iniB"), teams.B_IMG, initialsFromTeamName(teams.B));
-
-    $("statusPill").innerHTML = `<strong>Status:</strong> ${locked ? "LOCKED" : "OPEN"}`;
-    $("userPill").innerHTML = `<strong>You:</strong> ${session.name || "—"}`;
-
-    const o = st.odds || {pA:0.5,pB:0.5};
-    const t = totalsCache;
-
-    $("linePill").innerHTML = `<strong>Line:</strong> ${Math.round(o.pA*100)}/${Math.round(o.pB*100)}`;
-    $("pA").textContent = Math.round(o.pA*100) + "%";
-    $("pB").textContent = Math.round(o.pB*100) + "%";
-    $("ptsA").textContent = `${t.ptsA} pts on A`;
-    $("ptsB").textContent = `${t.ptsB} pts on B`;
-
-    $("betA").textContent = `BET ON ${teams.A}`;
-    $("betB").textContent = `BET ON ${teams.B}`;
-
-    $("betA").disabled = locked;
-    $("betB").disabled = locked;
-  }
-
-  function fmtCountdown(ms){
-    if(ms <= 0) return "LOCK TIME";
-    const totalSec = Math.floor(ms/1000);
-    const d = Math.floor(totalSec / 86400);
-    const h = Math.floor((totalSec % 86400) / 3600);
-    const m = Math.floor((totalSec % 3600) / 60);
-    const s = totalSec % 60;
-    const hh = String(h).padStart(2,"0");
-    const mm = String(m).padStart(2,"0");
-    const ss = String(s).padStart(2,"0");
-    return d > 0 ? `${d}d ${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`;
-  }
-  function tickCountdown(){
-    const ms = LOCK_AT_LOCAL.getTime() - Date.now();
-    $("countdown").textContent = fmtCountdown(ms);
-  }
-
-  function toggleAdmin(){
-    const panel = $("adminPanel");
-    if(!panel) return;
-    panel.classList.toggle("hidden");
-    const pin = $("adminPin");
-    if(pin && !panel.classList.contains("hidden")) pin.focus();
-  }
-
-  async function setWinner(winner){
-    const adminPin = ($("adminPin")?.value || "").trim();
-    if(!adminPin){ alert("Enter admin PIN"); return; }
-
-    const msg = $("adminMsg");
-    if(msg) msg.innerHTML = `<strong>Status:</strong> Setting winner…`;
-
-    const res = await apiPost({ action:"setwinner", winner, adminPin }); // ✅ lowercase action
-    if(!res.ok){
-      if(msg) msg.innerHTML = `<strong>Status:</strong> ${res.error || "Failed"}`;
-      alert(res.error || "Failed");
-      return;
-    }
-
-    if(msg) msg.innerHTML = `<strong>Status:</strong> Winner set to ${winner}`;
-    await refresh();
-    await maybeAutoShowResults(true);
-  }
-
-  async function openResults(){
-    await loadResults();
-    showResults();
-  }
-
-  async function loadResults(){
-    if(!session.name || !session.pin){
-      $("resultsTitle").textContent = "Log in to view results.";
-      $("resultsPill").innerHTML = `<strong>Status:</strong> not logged in`;
-      return;
-    }
-
-    $("resultsUserPill").innerHTML = `<strong>You:</strong> ${session.name}`;
-    $("resultsPill").innerHTML = `<strong>Status:</strong> loading`;
-
-    const url = `${SCRIPT_URL}?action=results&name=${encodeURIComponent(session.name)}&pin=${encodeURIComponent(session.pin)}&ts=${Date.now()}`;
-
-    try{
-      const res = await apiGet(url);
-      if(!res.ok){
-        $("resultsTitle").textContent = res.error || "Could not load results.";
-        $("resultsPill").innerHTML = `<strong>Status:</strong> error`;
-        $("resultsMsg").innerHTML = `<strong>Note:</strong> ${res.error || "—"}`;
-        return;
-      }
-
-      if(!res.winner){
-        $("resultsTitle").textContent = "Winner not set yet.";
-        $("resultsPill").innerHTML = `<strong>Status:</strong> waiting`;
-        $("poolPill").innerHTML = `<strong>Pot:</strong> —`;
-        $("payoutPill").innerHTML = `<strong>Payout per point:</strong> —`;
-        $("youStakePill").innerHTML = `<strong>Your stake:</strong> —`;
-        $("youPayoutPill").innerHTML = `<strong>Your payout:</strong> —`;
-        $("youNetPill").innerHTML = `<strong>Your net:</strong> —`;
-        $("youOwePill").innerHTML = `<strong>You owe:</strong> —`;
-        $("resultsMsg").innerHTML = `<strong>Note:</strong> ${res.message || "—"}`;
-        return;
-      }
-
-      const win = res.winner;
-      const lose = res.loser;
-
-      $("resultsPill").innerHTML = `<strong>Status:</strong> FINAL`;
-      $("resultsTitle").textContent = `WINNER: ${win === "A" ? teamsCache.A : teamsCache.B}`;
-
-      $("poolPill").innerHTML = `<strong>Pot:</strong> ${res.potPts} pts (${money(res.potDollars)})`;
-
-      $("payoutPill").innerHTML =
-        `<strong>Payout per point:</strong> ${Number(res.payoutPerPoint).toFixed(2)}x`;
-
-      $("youStakePill").innerHTML =
-        `<strong>Your stake:</strong> ${res.userWinnerPts > 0 ? (res.userWinnerPts + " pts") : (res.userLoserPts + " pts")} (${money(res.userStakeDollars || (res.oweDollars || 0))})`;
-
-      $("youPayoutPill").innerHTML =
-        `<strong>Your payout:</strong> ${res.userPayoutPts ?? 0} pts (${money(res.userPayoutDollars || 0)})`;
-
-      const net = Number(res.userNetDollars || 0);
-      $("youNetPill").innerHTML =
-        `<strong>Your net:</strong> ${money(net)} ${net >= 0 ? "(profit)" : "(loss)"}`;
-
-      $("youOwePill").innerHTML =
-        `<strong>You owe:</strong> ${money(res.oweDollars || 0)} (${lose} side stake)`;
-
-      $("resultsMsg").innerHTML =
-        `<strong>Note:</strong> ${res.message || "Pari-mutuel payout comes only from the losing pool."}`;
-
-    }catch(e){
-      $("resultsTitle").textContent = "Could not load results.";
-      $("resultsPill").innerHTML = `<strong>Status:</strong> error`;
-      $("resultsMsg").innerHTML = `<strong>Note:</strong> ${String(e)}`;
-    }
-  }
-
-  async function maybeAutoShowResults(forceShow=false){
-    if(!session.name || !session.pin) return;
-    try{
-      const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
-      if(st.ok && st.config && (st.config.WINNER === "A" || st.config.WINNER === "B")){
-        render(st);
-        await loadResults();
-        if(forceShow) showResults();
-      }
-    }catch(e){}
-  }
-
-  (async function boot(){
-    setAuthMode("returning");
-    showAuth();
-
-    tickCountdown();
-    setInterval(tickCountdown, 1000);
-
-    loadSession();
-
-    try{
-      const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
-      if(st.ok) render(st);
-    }catch(e){}
-
-    if(session.name && session.pin){
-      const res = await apiPost({ action:"login", name:session.name, pin:session.pin });
-      if(res.ok){
-        showBetting();
-        render(res.state);
-        renderBalance(res.balance);
-        restoreUndoUI();
-        await maybeAutoShowResults();
-      } else {
-        clearSession();
-        showAuth();
-      }
-    }
-  })();
-
-  setInterval(()=>{
-    if(!$("betCard").classList.contains("hidden")) refresh();
-    if(!$("resultsCard").classList.contains("hidden")) loadResults();
-  }, 5000);
-</script>
-
-</body>
-</html><!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Golfshi — Match Odds</title>
-
-  <style>
-    :root{
-      --bg:#0b1020; --text:#e9eeff; --muted:#a8b3d6; --line:rgba(255,255,255,.10);
-      --shadow:0 12px 30px rgba(0,0,0,.35); --radius:18px;
-      --good: rgba(56,217,150,.95);
-      --bad:  rgba(255,90,90,.92);
-      --blue1: rgba(80,140,255,.95);
-      --blue2: rgba(60,120,235,.95);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background:
-        radial-gradient(1200px 700px at 20% 10%, rgba(56,217,150,.14), transparent 55%),
-        radial-gradient(900px 650px at 85% 20%, rgba(80,140,255,.14), transparent 55%),
-        var(--bg);
-      color:var(--text);
-      min-height:100vh;
-    }
-
-    main{max-width:760px;margin:0 auto;padding:0 16px 28px}
-    header{max-width:760px;margin:0 auto;padding:22px 16px 10px;text-align:center;}
-    h1{margin:0;font-size:26px;letter-spacing:-.3px;font-weight:980}
-    .sub{color:var(--muted);font-size:15px;margin-top:6px;font-weight:900}
-
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      margin-top:14px;
-    }
-
-    .hd{
-      padding:14px 16px;
-      border-bottom:1px solid var(--line);
-      background:rgba(255,255,255,.02);
-      display:flex;align-items:center;justify-content:flex-start;gap:10px;flex-wrap:wrap;
-    }
-    #userPill{ margin-left:auto; }
-
-    .pill{
-      font-size:13px;font-weight:950;color:var(--muted);
-      border:1px solid var(--line);
-      border-radius:12px;
-      padding:7px 10px;
-      background:rgba(27,39,80,.55)
-    }
-    .pill strong{color:var(--text)}
-    .bd{padding:16px}
-
-    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px;font-weight:950}
-    input,button{font:inherit}
-    input{
-      width:100%;padding:12px;border-radius:12px;
-      border:1px solid var(--line);
-      background:rgba(10,16,40,.55);
-      color:var(--text);
-      outline:none;
-      font-size:16px;
-      font-weight:900;
-    }
-
-    button{
-      border:1px solid var(--line);
-      background: linear-gradient(180deg, rgba(42,60,122,.95), rgba(34,52,107,.95));
-      color:var(--text);
-      padding:14px 14px;
-      border-radius:14px;
-      cursor:pointer;
-      font-weight:980;
-      font-size:16px;
-    }
-    button.secondary{background:rgba(18,26,51,.55)}
-    button:disabled{opacity:.5;cursor:not-allowed}
-
-    button.active{
-      background: linear-gradient(180deg, var(--blue1), var(--blue2));
-      border-color: rgba(120,170,255,.45);
-    }
-
-    .seg{display:flex;gap:12px;flex-wrap:wrap}
-    .segBtn{flex:1;padding:18px;border-radius:16px;font-weight:980;font-size:16px}
-
-    .metaStack{display:flex;flex-direction:column;gap:10px;margin-top:12px}
-    .metaRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .countStrong{color:var(--text);font-weight:980}
-    .hidden{display:none!important}
-
-    .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:10px;}
-    .controls .pill{flex:1;min-width:220px}
-    .ptsBox{display:flex;flex-direction:column;gap:6px;min-width:160px;flex:0 0 auto;}
-    .ptsBox input{width:160px;padding:12px;border-radius:12px;font-size:22px;font-weight:980;}
-
-    .preset{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-    .preset button{padding:12px 12px;border-radius:14px}
-
-    .undoBar{
-      margin-top:12px;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-    .undoBar .pill{flex:1;min-width:220px}
-
-    .market{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
-    .side{
-      border:1px solid var(--line);
-      border-radius:16px;
-      background:rgba(15,23,48,.6);
-      padding:14px
-    }
-    .teamHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
-    .teamLeft{display:flex;align-items:center;gap:10px;min-width:0}
-    .avatar{
-      width:75px;height:75px;border-radius:25px;
-      border:1px solid var(--line);
-      background:rgba(20,30,65,.6);
-      overflow:hidden;
-      position:relative;
-      flex:0 0 auto;
-    }
-    .avatar img{width:100%;height:100%;object-fit:cover;display:none;}
-    .avatar span{
-      position:absolute;inset:0;
-      display:grid;place-items:center;
-      font-weight:980;letter-spacing:.5px;
-    }
-    .teamName{
-      font-weight:980;
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-      font-size:18px;
-    }
-
-    .price{display:flex;align-items:baseline;justify-content:flex-start;gap:12px;margin-top:4px}
-    .big{font-size:46px;font-weight:980;letter-spacing:-.4px}
-    .side .price .small{display:none;}
-    .small{font-size:12px;color:var(--muted);font-weight:950}
-
-    .betBtn{
-      width:100%;
-      padding:18px 14px;
-      font-size:18px;
-      border-radius:16px;
-    }
-
-    .adminWrap{margin-top:10px; display:flex; justify-content:flex-end;}
-    #adminBtn{
-      padding:6px 10px;
-      font-size:11px;
-      border-radius:10px;
-      opacity:.55;
-    }
-    #adminBtn:hover{opacity:.85}
-
     /* CONFIRM MODAL (big + bold) */
     .modalBackdrop{
       position:fixed; inset:0;
@@ -1094,50 +182,10 @@
     .modalActions{display:flex;gap:10px;flex-wrap:wrap;}
     .modalActions button{flex:1;min-width:160px;padding:14px 14px;font-weight:980;font-size:18px}
 
-    /* RESULTS CARD */
-    .resultHeader{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .resultTitle{
-      font-size:18px;
-      font-weight:980;
-      margin:0;
-    }
-    .resultBig{
-      font-size:34px;
-      font-weight:980;
-      letter-spacing:-.3px;
-      margin:8px 0 10px 0;
-    }
-    .tag{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 10px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(27,39,80,.55);
-      font-weight:980;
-      font-size:13px;
-    }
-    .tag.good{ border-color: rgba(56,217,150,.45); }
-    .tag.bad{  border-color: rgba(255,90,90,.45); }
-    .moneyGood{ color: rgba(120,255,200,.95); }
-    .moneyBad{ color: rgba(255,140,140,.95); }
-    .kv{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      padding:10px 0;
-      border-bottom:1px solid rgba(255,255,255,.06);
-      font-weight:950;
-    }
-    .kv:last-child{border-bottom:none}
-    .kv .k{color:var(--muted);font-weight:900}
+    /* Results box */
+    .resultGrid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+    .resultLine{display:flex;gap:10px;flex-wrap:wrap}
+    .resultLine .pill{flex:1;min-width:200px}
 
     @media (max-width:540px){
       .controls{flex-direction:column;align-items:stretch}
@@ -1204,62 +252,26 @@
 
         <div class="metaRow">
           <button class="secondary" type="button" onclick="logout()">Log out</button>
+          <button class="secondary" type="button" onclick="viewResults()">View results</button>
         </div>
       </div>
 
-      <!-- RESULTS (shows only after winner is set) -->
-      <section class="card hidden" id="resultsCard" style="margin-top:14px;">
+      <!-- RESULTS PANEL -->
+      <div id="resultsCard" class="card hidden" style="margin-top:14px">
         <div class="hd">
-          <div class="resultHeader" style="width:100%">
-            <h2 class="resultTitle" style="margin:0">Match Results</h2>
-            <div id="resultsTag" class="tag">—</div>
-          </div>
+          <div class="pill"><strong>Results</strong></div>
+          <div class="pill" id="resultsStatus"><strong>Status:</strong> —</div>
         </div>
         <div class="bd">
-          <div id="resultsBig" class="resultBig">—</div>
+          <div class="pill" id="resultsHeadline"><strong>—</strong></div>
 
-          <div class="kv">
-            <div class="k">Winner</div>
-            <div id="rWinner">—</div>
-          </div>
-          <div class="kv">
-            <div class="k">Losing pool (pot)</div>
-            <div id="rPot">—</div>
-          </div>
-          <div class="kv">
-            <div class="k">Winning pool</div>
-            <div id="rWinPool">—</div>
-          </div>
-          <div class="kv">
-            <div class="k">Payout / point</div>
-            <div id="rPayoutPerPt">—</div>
+          <div class="resultGrid" id="resultsGrid">
+            <!-- filled by JS -->
           </div>
 
-          <div class="kv">
-            <div class="k">Your winner points</div>
-            <div id="rYourWinPts">—</div>
-          </div>
-          <div class="kv">
-            <div class="k">Your losing points</div>
-            <div id="rYourLosePts">—</div>
-          </div>
-
-          <div class="kv">
-            <div class="k">Your payout</div>
-            <div id="rYourPayout">—</div>
-          </div>
-          <div class="kv">
-            <div class="k">You owe</div>
-            <div id="rYouOwe">—</div>
-          </div>
-          <div class="kv">
-            <div class="k">Net</div>
-            <div id="rNet">—</div>
-          </div>
-
-          <div class="pill" id="rMsg" style="margin-top:12px"><strong>Status:</strong> —</div>
+          <div class="pill" id="resultsMsg" style="margin-top:10px"><strong>—</strong></div>
         </div>
-      </section>
+      </div>
 
       <div class="controls">
         <div class="pill" id="maxPill">
@@ -1363,19 +375,20 @@
 </div>
 
 <script>
-  // ✅ Your Apps Script Web App /exec URL
+  // ✅ Your real Apps Script Web App /exec
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzxOVSjxpBDALIibr1bnqDJW7eYYIwlXGW2srhTyJ2KYedOuJkNO_jgDzPOWuDXxf4H3A/exec";
 
   const $ = (id) => document.getElementById(id);
   let session = { name:"", pin:"" };
 
+  // Countdown: 9:55 AM on 2/27/2026 (viewer local time)
   const LOCK_AT_LOCAL = new Date(2026, 1, 27, 9, 55, 0);
 
   // confirm state
   let pendingSide = "";
   let teamsCache = { A:"Team A", B:"Team B" };
 
-  // undo state
+  // undo state (client timer + backend enforced)
   let lastBetId = "";
   let undoUntil = 0;
   let undoTimer = null;
@@ -1455,7 +468,7 @@
     render(res.state);
     renderBalance(res.balance);
     restoreUndoUI();
-    await refreshResults(); // in case winner already set
+    checkResultsAuto();
   }
 
   async function loginReturningUser(){
@@ -1473,7 +486,7 @@
     render(res.state);
     renderBalance(res.balance);
     restoreUndoUI();
-    await refreshResults(); // show results if match ended
+    checkResultsAuto();
   }
 
   function logout(){
@@ -1548,7 +561,7 @@
     await placeBet(side);
   }
 
-  // ---- Undo ----
+  // ---- Undo bar ----
   function showUndo(betId, undoMinutes){
     const mins = Number(undoMinutes || 5);
     lastBetId = betId;
@@ -1609,7 +622,7 @@
     hideUndo();
     render(res.state);
     renderBalance(res.balance);
-    await refreshResults();
+    checkResultsAuto();
   }
 
   // ---- Betting ----
@@ -1627,7 +640,7 @@
 
     render(res.state);
     renderBalance(res.balance);
-    await refreshResults();
+    checkResultsAuto();
   }
 
   async function refresh(){
@@ -1638,6 +651,8 @@
       if(session.name && session.pin){
         const b = await apiGet(`${SCRIPT_URL}?action=balance&name=${encodeURIComponent(session.name)}&pin=${encodeURIComponent(session.pin)}&ts=${Date.now()}`);
         if(b.ok) renderBalance(b);
+
+        await checkResultsAuto();
       }
     }catch(e){}
   }
@@ -1662,8 +677,8 @@
     $("statusPill").innerHTML = `<strong>Status:</strong> ${locked ? "LOCKED" : "OPEN"}`;
     $("userPill").innerHTML = `<strong>You:</strong> ${session.name || "—"}`;
 
-    const o = st.odds;
-    const t = st.totals;
+    const o = st.odds || {pA:0.5,pB:0.5};
+    const t = st.totals || {ptsA:0,ptsB:0};
 
     $("linePill").innerHTML = `<strong>Line:</strong> ${Math.round(o.pA*100)}/${Math.round(o.pB*100)}`;
     $("pA").textContent = Math.round(o.pA*100) + "%";
@@ -1678,6 +693,120 @@
     $("betB").disabled = locked;
   }
 
+  // ---- Results ----
+  function hideResults(){
+    $("resultsCard").classList.add("hidden");
+  }
+
+  function showResults(r){
+    $("resultsCard").classList.remove("hidden");
+
+    if(!r.winner){
+      $("resultsStatus").innerHTML = `<strong>Status:</strong> NOT SET`;
+      $("resultsHeadline").innerHTML = `<strong>Winner not set yet.</strong>`;
+      $("resultsGrid").innerHTML = "";
+      $("resultsMsg").innerHTML = `<strong>${r.message || ""}</strong>`;
+      return;
+    }
+
+    $("resultsStatus").innerHTML = `<strong>Status:</strong> FINAL`;
+    $("resultsHeadline").innerHTML =
+      `<strong>WINNER: ${r.winner} • LOSER: ${r.loser}</strong>`;
+
+    const fmt = (x)=> (Number(x)||0).toFixed(2);
+
+    // Build lines that match your pari-mutuel response
+    const lines = [];
+
+    lines.push(`<div class="resultLine">
+      <div class="pill"><strong>Loser pool:</strong> ${r.potPts} pts ($${fmt(r.potDollars)})</div>
+      <div class="pill"><strong>Winner pool:</strong> ${r.winPoolPts} pts</div>
+    </div>`);
+
+    lines.push(`<div class="resultLine">
+      <div class="pill"><strong>Payout / 1 winner pt:</strong> ${fmt(r.payoutPerPoint)} pts</div>
+      <div class="pill"><strong>$ / point:</strong> $${fmt(r.dollarsPerPoint)}</div>
+    </div>`);
+
+    lines.push(`<div class="resultLine">
+      <div class="pill"><strong>Your winner pts:</strong> ${r.userWinnerPts}</div>
+      <div class="pill"><strong>Your loser pts:</strong> ${r.userLoserPts}</div>
+    </div>`);
+
+    if((r.userWinnerPts||0) > 0){
+      lines.push(`<div class="resultLine">
+        <div class="pill"><strong>Your payout:</strong> ${fmt(r.userPayoutPts)} pts ($${fmt(r.userPayoutDollars)})</div>
+        <div class="pill"><strong>Your stake:</strong> $${fmt(r.userStakeDollars)}</div>
+      </div>`);
+      lines.push(`<div class="resultLine">
+        <div class
+              lines.push(`<div class="resultLine">
+        <div class="pill"><strong>Net:</strong> $${fmt(r.userNetDollars)}</div>
+        <div class="pill"><strong>Message:</strong> ${r.message || ""}</div>
+      </div>`);
+    } else if((r.userLoserPts||0) > 0){
+      lines.push(`<div class="resultLine">
+        <div class="pill"><strong>You owe:</strong> $${fmt(r.oweDollars)}</div>
+        <div class="pill"><strong>Message:</strong> ${r.message || ""}</div>
+      </div>`);
+    } else {
+      lines.push(`<div class="resultLine">
+        <div class="pill"><strong>Message:</strong> ${r.message || "No bets by you."}</div>
+      </div>`);
+    }
+
+    $("resultsGrid").innerHTML = lines.join("");
+    $("resultsMsg").innerHTML = `<strong>${r.message || ""}</strong>`;
+  }
+
+  async function viewResults(){
+    if(!session.name || !session.pin){ alert("Login first."); return; }
+    const r = await apiGet(`${SCRIPT_URL}?action=results&name=${encodeURIComponent(session.name)}&pin=${encodeURIComponent(session.pin)}&ts=${Date.now()}`);
+    if(!r.ok){ alert(r.error || "Could not load results"); return; }
+    showResults(r);
+  }
+
+  async function checkResultsAuto(){
+    if(!session.name || !session.pin) return;
+    try{
+      const r = await apiGet(`${SCRIPT_URL}?action=results&name=${encodeURIComponent(session.name)}&pin=${encodeURIComponent(session.pin)}&ts=${Date.now()}`);
+      if(r && r.ok && r.winner){
+        showResults(r);
+      }
+    }catch(e){}
+  }
+
+  // ---- Admin ----
+  function toggleAdmin(){
+    const panel = $("adminPanel");
+    if(!panel) return;
+    panel.classList.toggle("hidden");
+    const pin = $("adminPin");
+    if(pin && !panel.classList.contains("hidden")) pin.focus();
+  }
+
+  async function setWinner(winner){
+    const adminPin = ($("adminPin")?.value || "").trim();
+    if(!adminPin){ alert("Enter admin PIN"); return; }
+
+    const msg = $("adminMsg");
+    if(msg) msg.innerHTML = `<strong>Status:</strong> Setting winner…`;
+
+    // MUST be POST (backend expects doPost action=setwinner)
+    const res = await apiPost({ action:"setwinner", winner, adminPin });
+
+    if(!res.ok){
+      if(msg) msg.innerHTML = `<strong>Status:</strong> ${res.error || "Failed"}`;
+      alert(res.error || "Failed");
+      return;
+    }
+
+    if(msg) msg.innerHTML = `<strong>Status:</strong> Winner set to ${winner}`;
+    await refresh();
+    await viewResults();
+  }
+
+  // ---- Countdown ----
   function fmtCountdown(ms){
     if(ms <= 0) return "LOCK TIME";
     const totalSec = Math.floor(ms/1000);
@@ -1695,117 +824,18 @@
     $("countdown").textContent = fmtCountdown(ms);
   }
 
-  // ---- Results UI ----
-  function hideResults(){
-    $("resultsCard").classList.add("hidden");
-  }
-
-  function fmtMoney(x){
-    const n = Number(x || 0);
-    return "$" + (Math.round(n * 100) / 100).toFixed(2);
-  }
-
-  async function refreshResults(){
-    if(!session.name || !session.pin) return;
-
-    try{
-      const r = await apiGet(
-        `${SCRIPT_URL}?action=results&name=${encodeURIComponent(session.name)}&pin=${encodeURIComponent(session.pin)}&ts=${Date.now()}`
-      );
-
-      if(!r || !r.ok){
-        hideResults();
-        return;
-      }
-
-      if(!r.winner){
-        // winner not set yet
-        hideResults();
-        return;
-      }
-
-      // Show results card
-      $("resultsCard").classList.remove("hidden");
-
-      const winnerSide = r.winner;
-      const winnerName = (winnerSide === "A") ? teamsCache.A : teamsCache.B;
-
-      $("rWinner").textContent = winnerName;
-
-      $("rPot").textContent = `${r.potPts} pts (${fmtMoney(r.potDollars)})`;
-      $("rWinPool").textContent = `${r.winPoolPts} pts`;
-      $("rPayoutPerPt").textContent = `${r.payoutPerPoint}x`;
-
-      $("rYourWinPts").textContent = `${r.userWinnerPts || 0} pts`;
-      $("rYourLosePts").textContent = `${r.userLoserPts || 0} pts`;
-
-      $("rYourPayout").textContent = fmtMoney(r.userPayoutDollars || 0);
-      $("rYouOwe").textContent = fmtMoney(r.oweDollars || 0);
-
-      const net = Number(r.userNetDollars || 0);
-      const netEl = $("rNet");
-      netEl.textContent = fmtMoney(net);
-      netEl.classList.toggle("moneyGood", net > 0);
-      netEl.classList.toggle("moneyBad", net < 0);
-
-      const tag = $("resultsTag");
-      const big = $("resultsBig");
-
-      // Decide winner/loser for user
-      if((r.userWinnerPts || 0) > 0){
-        tag.className = "tag good";
-        tag.textContent = "YOU WON";
-        big.innerHTML = `YOU WIN <span class="moneyGood">${fmtMoney(r.userNetDollars)}</span>`;
-      } else if((r.userLoserPts || 0) > 0){
-        tag.className = "tag bad";
-        tag.textContent = "YOU LOST";
-        big.innerHTML = `YOU OWE <span class="moneyBad">${fmtMoney(r.oweDollars)}</span>`;
-      } else {
-        tag.className = "tag";
-        tag.textContent = "NO BET";
-        big.textContent = "NO BETS PLACED";
-      }
-
-      $("rMsg").innerHTML = `<strong>Status:</strong> ${r.message || "Finalized."}`;
-    }catch(e){
-      hideResults();
-    }
-  }
-
-  // Admin
-  function toggleAdmin(){
-    const panel = $("adminPanel");
-    if(!panel) return;
-    panel.classList.toggle("hidden");
-    const pin = $("adminPin");
-    if(pin && !panel.classList.contains("hidden")) pin.focus();
-  }
-
-  async function setWinner(winner){
-    const adminPin = ($("adminPin")?.value || "").trim();
-    if(!adminPin){ alert("Enter admin PIN"); return; }
-
-    const msg = $("adminMsg");
-    if(msg) msg.innerHTML = `<strong>Status:</strong> Setting winner…`;
-
-    const res = await apiPost({ action:"setwinner", winner, adminPin });
-    if(!res.ok){
-      if(msg) msg.innerHTML = `<strong>Status:</strong> ${res.error || "Failed"}`;
-      alert(res.error || "Failed");
-      return;
-    }
-
-    if(msg) msg.innerHTML = `<strong>Status:</strong> Winner set to ${winner}`;
-    await refresh();
-    await refreshResults();
-  }
-
   (async function boot(){
     setAuthMode("returning");
     showAuth();
 
     tickCountdown();
     setInterval(tickCountdown, 1000);
+
+    // preload market display even if not logged in
+    try{
+      const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
+      if(st.ok) render(st);
+    }catch(e){}
 
     loadSession();
     if(session.name && session.pin){
@@ -1815,26 +845,15 @@
         render(res.state);
         renderBalance(res.balance);
         restoreUndoUI();
-        await refreshResults();
+        checkResultsAuto();
       } else {
         clearSession();
         showAuth();
       }
-    } else {
-      try{
-        const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
-        if(st.ok) render(st);
-      }catch(e){}
     }
   })();
 
-  // refresh loop
-  setInterval(async ()=>{
-    if($("betCard").classList.contains("hidden")) return;
-    await refresh();
-    await refreshResults();
-  }, 5000);
+  setInterval(()=>{ if(!$("betCard").classList.contains("hidden")) refresh(); }, 5000);
 </script>
-
 </body>
 </html>
