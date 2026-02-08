@@ -271,7 +271,7 @@
 
       <!-- Undo bar -->
       <div id="undoBar" class="undoBar hidden">
-        <div class="pill" id="undoText"><strong>Undo bet:</strong> —</div>
+        <div class="pill" id="undoText"><strong>UNDO BET:</strong> —</div>
         <button class="secondary" type="button" onclick="cancelLastBet()">Undo bet</button>
       </div>
 
@@ -314,7 +314,6 @@
             <button id="betB" class="betBtn secondary" type="button" onclick="openConfirm('B')">Bet on Team B</button>
           </div>
 
-          <!-- Tiny Admin -->
           <div class="adminWrap">
             <button id="adminBtn" class="secondary" type="button" onclick="toggleAdmin()">Admin</button>
           </div>
@@ -342,7 +341,7 @@
 <!-- CONFIRM MODAL -->
 <div id="confirmBackdrop" class="modalBackdrop" onclick="backdropClick(event)">
   <div class="modal" onclick="event.stopPropagation()">
-    <h2 class="modalTitle" id="confirmTitle">CONFIRM YOUR WAGER</h2>
+    <h2 class="modalTitle">CONFIRM YOUR WAGER</h2>
     <p class="modalText" id="confirmText">—</p>
     <div class="modalActions">
       <button class="secondary" type="button" onclick="closeConfirm()">CANCEL</button>
@@ -352,22 +351,20 @@
 </div>
 
 <script>
-  // ✅ FIXED: Your real Apps Script Web App /exec URL
+  // ✅ Your real Apps Script Web App /exec URL
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzxOVSjxpBDALIibr1bnqDJW7eYYIwlXGW2srhTyJ2KYedOuJkNO_jgDzPOWuDXxf4H3A/exec";
-
-  // Safety warning if someone pastes the placeholder back in
-  if (SCRIPT_URL.includes("PASTE_YOURS")) {
-    alert("SCRIPT_URL is not set. Paste your Apps Script /exec URL into SCRIPT_URL.");
-  }
 
   const $ = (id) => document.getElementById(id);
   let session = { name:"", pin:"" };
 
+  // Market lock countdown (viewer local time)
   const LOCK_AT_LOCAL = new Date(2026, 1, 27, 9, 55, 0);
 
+  // confirm state
   let pendingSide = "";
   let teamsCache = { A:"Team A", B:"Team B" };
 
+  // undo state (client timer)
   let lastBetId = "";
   let undoUntil = 0;
   let undoTimer = null;
@@ -416,37 +413,60 @@
     }, 0);
   }
 
+  // ---------- Robust fetch helpers (shows REAL error cause) ----------
+  async function fetchJson(url, options){
+    let resp;
+    try{
+      resp = await fetch(url, { mode:"cors", redirect:"follow", ...options });
+    }catch(err){
+      throw new Error("NETWORK/CORS ERROR: " + (err?.message || String(err)));
+    }
+
+    const text = await resp.text();
+
+    // Try JSON parse; if it isn't JSON, show a helpful error
+    try{
+      return JSON.parse(text);
+    }catch(e){
+      const preview = text.slice(0, 280).replace(/\s+/g, " ").trim();
+      throw new Error(`NON-JSON RESPONSE (HTTP ${resp.status}). First chars: ${preview}`);
+    }
+  }
+
   async function apiPost(payload){
     const form = new URLSearchParams();
     for (const [k,v] of Object.entries(payload)) form.append(k, String(v));
-    const r = await fetch(SCRIPT_URL, {
+    return fetchJson(SCRIPT_URL, {
       method:"POST",
       headers:{ "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8" },
       body: form.toString()
     });
-    return r.json();
   }
 
   async function apiGet(url){
-    const r = await fetch(url);
-    return r.json();
+    return fetchJson(url, { method:"GET" });
   }
 
+  // ---------- Auth ----------
   async function registerNewUser(){
     const name = $("newName").value.trim();
     const pin  = $("newPin").value.trim();
     if(!name){ alert("Enter your name."); return; }
     if(!pin || pin.length < 4){ alert("PIN must be at least 4 characters."); return; }
 
-    const res = await apiPost({ action:"register", name, pin });
-    if(!res.ok){ alert(res.error || "Register failed"); return; }
+    try{
+      const res = await apiPost({ action:"register", name, pin });
+      if(!res.ok){ alert(res.error || "Register failed"); return; }
 
-    session = { name, pin };
-    saveSession();
-    showBetting();
-    render(res.state);
-    renderBalance(res.balance);
-    restoreUndoUI();
+      session = { name, pin };
+      saveSession();
+      showBetting();
+      render(res.state);
+      renderBalance(res.balance);
+      restoreUndoUI();
+    }catch(err){
+      alert(String(err.message || err));
+    }
   }
 
   async function loginReturningUser(){
@@ -455,15 +475,19 @@
     if(!name){ alert("Enter your name."); return; }
     if(!pin){ alert("Enter your PIN."); return; }
 
-    const res = await apiPost({ action:"login", name, pin });
-    if(!res.ok){ alert(res.error || "Login failed"); return; }
+    try{
+      const res = await apiPost({ action:"login", name, pin });
+      if(!res.ok){ alert(res.error || "Login failed"); return; }
 
-    session = { name, pin };
-    saveSession();
-    showBetting();
-    render(res.state);
-    renderBalance(res.balance);
-    restoreUndoUI();
+      session = { name, pin };
+      saveSession();
+      showBetting();
+      render(res.state);
+      renderBalance(res.balance);
+      restoreUndoUI();
+    }catch(err){
+      alert(String(err.message || err));
+    }
   }
 
   function logout(){
@@ -476,6 +500,7 @@
     showAuth();
   }
 
+  // ---------- UI helpers ----------
   function initialsFromTeamName(name){
     const s = String(name || "").replace(/&/g, " ").replace(/\s+/g, " ").trim();
     if(!s) return "?";
@@ -514,6 +539,7 @@
     $("betB").classList.toggle("secondary", side !== "B");
   }
 
+  // ---------- Confirm modal ----------
   function openConfirm(side){
     const pts = Number($("points").value);
     if(!Number.isFinite(pts) || pts <= 0){ alert("Enter points > 0."); return; }
@@ -536,6 +562,7 @@
     await placeBet(side);
   }
 
+  // ---------- Undo bar ----------
   function showUndo(betId, undoMinutes){
     const mins = Number(undoMinutes || 5);
     lastBetId = betId;
@@ -590,28 +617,37 @@
     if(!betId){ alert("No bet to undo."); return; }
     if(Date.now() > until){ hideUndo(); alert("Undo window expired."); return; }
 
-    const res = await apiPost({ action:"cancelbet", name:session.name, pin:session.pin, betId });
-    if(!res.ok){ alert(res.error || "Could not undo."); return; }
+    try{
+      const res = await apiPost({ action:"cancelbet", name:session.name, pin:session.pin, betId });
+      if(!res.ok){ alert(res.error || "Could not undo."); return; }
 
-    hideUndo();
-    render(res.state);
-    renderBalance(res.balance);
+      hideUndo();
+      render(res.state);
+      renderBalance(res.balance);
+    }catch(err){
+      alert(String(err.message || err));
+    }
   }
 
+  // ---------- Betting ----------
   async function placeBet(side){
     const pts = Number($("points").value);
     if(!Number.isFinite(pts) || pts <= 0){ alert("Enter points > 0."); return; }
 
     setActiveSide(side);
 
-    const res = await apiPost({ action:"bet", name:session.name, pin:session.pin, side, points:pts });
-    if(!res.ok){ alert(res.error || "Bet rejected"); await refresh(); return; }
+    try{
+      const res = await apiPost({ action:"bet", name:session.name, pin:session.pin, side, points:pts });
+      if(!res.ok){ alert(res.error || "Bet rejected"); await refresh(); return; }
 
-    const undoMin = res.state?.config?.UNDO_MINUTES || 5;
-    if(res.betId) showUndo(res.betId, undoMin);
+      const undoMin = res.state?.config?.UNDO_MINUTES || 5;
+      if(res.betId) showUndo(res.betId, undoMin);
 
-    render(res.state);
-    renderBalance(res.balance);
+      render(res.state);
+      renderBalance(res.balance);
+    }catch(err){
+      alert(String(err.message || err));
+    }
   }
 
   async function refresh(){
@@ -623,7 +659,9 @@
         const b = await apiGet(`${SCRIPT_URL}?action=balance&name=${encodeURIComponent(session.name)}&pin=${encodeURIComponent(session.pin)}&ts=${Date.now()}`);
         if(b.ok) renderBalance(b);
       }
-    }catch(e){}
+    }catch(e){
+      // keep silent on auto-refresh
+    }
   }
 
   function renderBalance(b){
@@ -694,15 +732,18 @@
     const msg = $("adminMsg");
     if(msg) msg.innerHTML = `<strong>Status:</strong> Setting winner…`;
 
-    const res = await apiPost({ action:"setwinner", winner, adminPin });
-    if(!res.ok){
-      if(msg) msg.innerHTML = `<strong>Status:</strong> ${res.error || "Failed"}`;
-      alert(res.error || "Failed");
-      return;
+    try{
+      const res = await apiPost({ action:"setwinner", winner, adminPin });
+      if(!res.ok){
+        if(msg) msg.innerHTML = `<strong>Status:</strong> ${res.error || "Failed"}`;
+        alert(res.error || "Failed");
+        return;
+      }
+      if(msg) msg.innerHTML = `<strong>Status:</strong> Winner set to ${winner}`;
+      await refresh();
+    }catch(err){
+      alert(String(err.message || err));
     }
-
-    if(msg) msg.innerHTML = `<strong>Status:</strong> Winner set to ${winner}`;
-    await refresh();
   }
 
   (async function boot(){
@@ -712,23 +753,31 @@
     tickCountdown();
     setInterval(tickCountdown, 1000);
 
+    // Always render market even when logged out
+    try{
+      const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
+      if(st.ok) render(st);
+    }catch(e){
+      $("matchSubtitle").textContent = "Could not load market (check web app access).";
+    }
+
     loadSession();
     if(session.name && session.pin){
-      const res = await apiPost({ action:"login", name:session.name, pin:session.pin });
-      if(res.ok){
-        showBetting();
-        render(res.state);
-        renderBalance(res.balance);
-        restoreUndoUI();
-      } else {
+      try{
+        const res = await apiPost({ action:"login", name:session.name, pin:session.pin });
+        if(res.ok){
+          showBetting();
+          render(res.state);
+          renderBalance(res.balance);
+          restoreUndoUI();
+        } else {
+          clearSession();
+          showAuth();
+        }
+      }catch(e){
         clearSession();
         showAuth();
       }
-    } else {
-      try{
-        const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
-        if(st.ok) render(st);
-      }catch(e){}
     }
   })();
 
