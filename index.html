@@ -722,7 +722,7 @@
 
     lines.push(`
       <div class="resultLine">
-        <div class="pill"><strong>Payout / 1 winner pt:</strong> ${fmt(r.payoutPerPoint)} pts</div>
+        <div class="pill"><strong>Payout / 1 winner pt:</strong> ${fmt(r.payoutPerPointPts)} pts</div>
         <div class="pill"><strong>$ / point:</strong> $${fmt(r.dollarsPerPoint)}</div>
       </div>
     `);
@@ -738,7 +738,7 @@
       lines.push(`
         <div class="resultLine">
           <div class="pill"><strong>Your payout:</strong> ${fmt(r.userPayoutPts)} pts ($${fmt(r.userPayoutDollars)})</div>
-          <div class="pill"><strong>Your stake:</strong> $${fmt(r.userStakeDollars)}</div>
+          <div class="pill"><strong>Your stake:</strong> $${fmt(r.userWinnerStakeDollars)}</div>
         </div>
       `);
       lines.push(`
