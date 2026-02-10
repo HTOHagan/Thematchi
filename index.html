@@ -159,6 +159,7 @@
     }
     #adminBtn:hover{opacity:.85}
 
+    /* CONFIRM MODAL */
     .modalBackdrop{
       position:fixed; inset:0;
       background:rgba(0,0,0,.60);
@@ -182,15 +183,41 @@
     .modalActions{display:flex;gap:10px;flex-wrap:wrap;}
     .modalActions button{flex:1;min-width:160px;padding:14px 14px;font-weight:980;font-size:18px}
 
+    /* Results */
     .resultGrid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
     .resultLine{display:flex;gap:10px;flex-wrap:wrap}
     .resultLine .pill{flex:1;min-width:200px}
+
+    /* BIG WIN / OWE banner */
+    .bigBanner{
+      margin-top:14px;
+      padding:22px 18px;
+      border-radius:20px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(90,140,255,.20), rgba(40,80,180,.18));
+      text-align:center;
+    }
+    .bigBannerTitle{
+      font-size:42px;
+      font-weight:1000;
+      letter-spacing:-.8px;
+      margin:0 0 6px 0;
+      color:var(--text);
+    }
+    .bigBannerSub{
+      font-size:20px;
+      color:var(--muted);
+      font-weight:900;
+      margin:0;
+    }
 
     @media (max-width:540px){
       .controls{flex-direction:column;align-items:stretch}
       .ptsBox{width:100%;min-width:0}
       .ptsBox input{width:100%;font-size:24px;padding:14px 12px}
       .preset button{flex:1;min-width:80px}
+      .bigBannerTitle{font-size:38px;}
+      .bigBannerSub{font-size:18px;}
     }
   </style>
 </head>
@@ -202,6 +229,8 @@
 </header>
 
 <main>
+
+  <!-- AUTH -->
   <section class="card" id="authCard">
     <div class="hd">
       <div class="pill"><strong>Step 1:</strong> Sign in</div>
@@ -233,6 +262,7 @@
     </div>
   </section>
 
+  <!-- BETTING -->
   <section class="card hidden" id="betCard">
     <div class="hd">
       <div class="pill" id="statusPill"></div>
@@ -252,6 +282,7 @@
         </div>
       </div>
 
+      <!-- RESULTS PANEL -->
       <div id="resultsCard" class="card hidden" style="margin-top:14px">
         <div class="hd">
           <div class="pill"><strong>Results</strong></div>
@@ -283,11 +314,13 @@
         <button class="secondary" type="button" onclick="setPts(100)">100</button>
       </div>
 
+      <!-- Undo bar -->
       <div id="undoBar" class="undoBar hidden">
         <div class="pill" id="undoText"><strong>Undo bet:</strong> —</div>
         <button class="secondary" type="button" onclick="cancelLastBet()">Undo bet</button>
       </div>
 
+      <!-- Teams -->
       <div class="market">
         <div class="side">
           <div class="teamHead">
@@ -326,6 +359,7 @@
             <button id="betB" class="betBtn secondary" type="button" onclick="openConfirm('B')">Bet on Team B</button>
           </div>
 
+          <!-- Admin -->
           <div class="adminWrap">
             <button id="adminBtn" class="secondary" type="button" onclick="toggleAdmin()">Admin</button>
           </div>
@@ -343,12 +377,14 @@
 
             <div class="pill" id="adminMsg" style="margin-top:10px"><strong>Status:</strong> —</div>
           </div>
+
         </div>
       </div>
     </div>
   </section>
 </main>
 
+<!-- CONFIRM MODAL -->
 <div id="confirmBackdrop" class="modalBackdrop" onclick="backdropClick(event)">
   <div class="modal" onclick="event.stopPropagation()">
     <h2 class="modalTitle">CONFIRM YOUR WAGER</h2>
@@ -361,12 +397,13 @@
 </div>
 
 <script>
-  // ✅ UPDATE THIS to your WORKING deployment URL (you confirmed this one works)
+  // ✅ WORKING deployment URL (confirmed)
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrRGMQ6mojHHuB-9z6yMPzLI-f6WQ1hdPt8Do76q4IORROVHtXiIBDSZ-u6QjQmvlthg/exec";
 
   const $ = (id) => document.getElementById(id);
   let session = { name:"", pin:"" };
 
+  // Countdown: 9:55 AM on 2/27/2026 (viewer local time)
   const LOCK_AT_LOCAL = new Date(2026, 1, 27, 9, 55, 0);
 
   let pendingSide = "";
@@ -378,7 +415,7 @@
 
   function setPts(n){ $("points").value = n; }
 
-  // Small helper: safe number formatting + field fallback
+  // Safe helpers
   const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
   const fmt = (v) => num(v).toFixed(2);
   const pick = (obj, ...keys) => {
@@ -537,6 +574,7 @@
     $("betB").classList.toggle("secondary", side !== "B");
   }
 
+  // ---- Confirm modal ----
   function openConfirm(side){
     const pts = Number($("points").value);
     if(!Number.isFinite(pts) || pts <= 0){ alert("Enter points > 0."); return; }
@@ -559,6 +597,7 @@
     await placeBet(side);
   }
 
+  // ---- Undo bar ----
   function showUndo(betId, undoMinutes){
     const mins = Number(undoMinutes || 5);
     lastBetId = betId;
@@ -622,6 +661,7 @@
     checkResultsAuto();
   }
 
+  // ---- Betting ----
   async function placeBet(side){
     const pts = Number($("points").value);
     if(!Number.isFinite(pts) || pts <= 0){ alert("Enter points > 0."); return; }
@@ -647,7 +687,6 @@
       if(session.name && session.pin){
         const b = await apiGet(`${SCRIPT_URL}?action=balance&name=${encodeURIComponent(session.name)}&pin=${encodeURIComponent(session.pin)}&ts=${Date.now()}`);
         if(b.ok) renderBalance(b);
-
         await checkResultsAuto();
       }
     }catch(e){}
@@ -689,6 +728,7 @@
     $("betB").disabled = locked;
   }
 
+  // ---- Results ----
   function hideResults(){ $("resultsCard").classList.add("hidden"); }
 
   function showResults(r){
@@ -704,26 +744,7 @@
 
     $("resultsStatus").innerHTML = `<strong>Status:</strong> FINAL`;
     $("resultsHeadline").innerHTML = `<strong>WINNER: ${r.winner} • LOSER: ${r.loser}</strong>`;
-// Big banner at top of results
-let bannerHtml = "";
 
-if((r.userWinnerPts||0) > 0){
-  bannerHtml = `
-    <div class="bigBanner">
-      <div class="bigBannerTitle">YOU WON ✅</div>
-      <div class="bigBannerSub">Net: $${fmt(r.userNetDollars)} • You receive $${fmt(r.userTotalReceivedDollars)}</div>
-    </div>
-  `;
-} else if((r.userLoserPts||0) > 0){
-  bannerHtml = `
-    <div class="bigBanner">
-      <div class="bigBannerTitle">YOU OWE ⚠️</div>
-      <div class="bigBannerSub">Amount due: $${fmt(r.oweDollars)}</div>
-    </div>
-  `;
-}
-
-$("resultsGrid").innerHTML = bannerHtml + lines.join("");
     const payoutPerPoint = pick(r, "payoutPerPointPts", "payoutPerPoint");
     const stakeDollars   = pick(r, "userWinnerStakeDollars", "userStakeDollars");
 
@@ -777,29 +798,26 @@ $("resultsGrid").innerHTML = bannerHtml + lines.join("");
         </div>
       `);
     }
-/* BIG WIN / OWE banner */
-.bigBanner{
-  margin-top:12px;
-  padding:18px 16px;
-  border-radius:18px;
-  border:1px solid var(--line);
-  background:rgba(255,255,255,.04);
-  font-weight:980;
-}
 
-.bigBannerTitle{
-  font-size:34px;
-  letter-spacing:-.4px;
-  margin:0 0 6px 0;
-}
+    // Big banner at top
+    let bannerHtml = "";
+    if(num(r.userWinnerPts) > 0){
+      bannerHtml = `
+        <div class="bigBanner">
+          <div class="bigBannerTitle">YOU WON ✅</div>
+          <div class="bigBannerSub">Net: $${fmt(r.userNetDollars)} • You receive $${fmt(r.userTotalReceivedDollars)}</div>
+        </div>
+      `;
+    } else if(num(r.userLoserPts) > 0){
+      bannerHtml = `
+        <div class="bigBanner">
+          <div class="bigBannerTitle">YOU OWE ⚠️</div>
+          <div class="bigBannerSub">Amount due: $${fmt(r.oweDollars)}</div>
+        </div>
+      `;
+    }
 
-.bigBannerSub{
-  font-size:18px;
-  color:var(--muted);
-  margin:0;
-  font-weight:900;
-}
-    $("resultsGrid").innerHTML = lines.join("");
+    $("resultsGrid").innerHTML = bannerHtml + lines.join("");
     $("resultsMsg").innerHTML = `<strong>${r.message || ""}</strong>`;
   }
 
@@ -818,6 +836,7 @@ $("resultsGrid").innerHTML = bannerHtml + lines.join("");
     }catch(e){}
   }
 
+  // ---- Admin ----
   function toggleAdmin(){
     const panel = $("adminPanel");
     if(!panel) return;
@@ -845,6 +864,7 @@ $("resultsGrid").innerHTML = bannerHtml + lines.join("");
     await viewResults();
   }
 
+  // ---- Countdown ----
   function fmtCountdown(ms){
     if(ms <= 0) return "LOCK TIME";
     const totalSec = Math.floor(ms/1000);
@@ -869,6 +889,7 @@ $("resultsGrid").innerHTML = bannerHtml + lines.join("");
     tickCountdown();
     setInterval(tickCountdown, 1000);
 
+    // preload market even if logged out
     try{
       const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
       if(st.ok) render(st);
