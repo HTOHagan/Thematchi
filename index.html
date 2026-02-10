@@ -704,7 +704,26 @@
 
     $("resultsStatus").innerHTML = `<strong>Status:</strong> FINAL`;
     $("resultsHeadline").innerHTML = `<strong>WINNER: ${r.winner} • LOSER: ${r.loser}</strong>`;
+// Big banner at top of results
+let bannerHtml = "";
 
+if((r.userWinnerPts||0) > 0){
+  bannerHtml = `
+    <div class="bigBanner">
+      <div class="bigBannerTitle">YOU WON ✅</div>
+      <div class="bigBannerSub">Net: $${fmt(r.userNetDollars)} • You receive $${fmt(r.userTotalReceivedDollars)}</div>
+    </div>
+  `;
+} else if((r.userLoserPts||0) > 0){
+  bannerHtml = `
+    <div class="bigBanner">
+      <div class="bigBannerTitle">YOU OWE ⚠️</div>
+      <div class="bigBannerSub">Amount due: $${fmt(r.oweDollars)}</div>
+    </div>
+  `;
+}
+
+$("resultsGrid").innerHTML = bannerHtml + lines.join("");
     const payoutPerPoint = pick(r, "payoutPerPointPts", "payoutPerPoint");
     const stakeDollars   = pick(r, "userWinnerStakeDollars", "userStakeDollars");
 
@@ -758,7 +777,28 @@
         </div>
       `);
     }
+/* BIG WIN / OWE banner */
+.bigBanner{
+  margin-top:12px;
+  padding:18px 16px;
+  border-radius:18px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.04);
+  font-weight:980;
+}
 
+.bigBannerTitle{
+  font-size:34px;
+  letter-spacing:-.4px;
+  margin:0 0 6px 0;
+}
+
+.bigBannerSub{
+  font-size:18px;
+  color:var(--muted);
+  margin:0;
+  font-weight:900;
+}
     $("resultsGrid").innerHTML = lines.join("");
     $("resultsMsg").innerHTML = `<strong>${r.message || ""}</strong>`;
   }
