@@ -159,7 +159,6 @@
     }
     #adminBtn:hover{opacity:.85}
 
-    /* CONFIRM MODAL */
     .modalBackdrop{
       position:fixed; inset:0;
       background:rgba(0,0,0,.60);
@@ -183,7 +182,6 @@
     .modalActions{display:flex;gap:10px;flex-wrap:wrap;}
     .modalActions button{flex:1;min-width:160px;padding:14px 14px;font-weight:980;font-size:18px}
 
-    /* Results */
     .resultGrid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
     .resultLine{display:flex;gap:10px;flex-wrap:wrap}
     .resultLine .pill{flex:1;min-width:200px}
@@ -204,8 +202,6 @@
 </header>
 
 <main>
-
-  <!-- AUTH -->
   <section class="card" id="authCard">
     <div class="hd">
       <div class="pill"><strong>Step 1:</strong> Sign in</div>
@@ -237,7 +233,6 @@
     </div>
   </section>
 
-  <!-- BETTING -->
   <section class="card hidden" id="betCard">
     <div class="hd">
       <div class="pill" id="statusPill"></div>
@@ -257,7 +252,6 @@
         </div>
       </div>
 
-      <!-- RESULTS PANEL -->
       <div id="resultsCard" class="card hidden" style="margin-top:14px">
         <div class="hd">
           <div class="pill"><strong>Results</strong></div>
@@ -289,13 +283,11 @@
         <button class="secondary" type="button" onclick="setPts(100)">100</button>
       </div>
 
-      <!-- Undo bar -->
       <div id="undoBar" class="undoBar hidden">
         <div class="pill" id="undoText"><strong>Undo bet:</strong> —</div>
         <button class="secondary" type="button" onclick="cancelLastBet()">Undo bet</button>
       </div>
 
-      <!-- Teams -->
       <div class="market">
         <div class="side">
           <div class="teamHead">
@@ -334,7 +326,6 @@
             <button id="betB" class="betBtn secondary" type="button" onclick="openConfirm('B')">Bet on Team B</button>
           </div>
 
-          <!-- Admin -->
           <div class="adminWrap">
             <button id="adminBtn" class="secondary" type="button" onclick="toggleAdmin()">Admin</button>
           </div>
@@ -352,14 +343,12 @@
 
             <div class="pill" id="adminMsg" style="margin-top:10px"><strong>Status:</strong> —</div>
           </div>
-
         </div>
       </div>
     </div>
   </section>
 </main>
 
-<!-- CONFIRM MODAL -->
 <div id="confirmBackdrop" class="modalBackdrop" onclick="backdropClick(event)">
   <div class="modal" onclick="event.stopPropagation()">
     <h2 class="modalTitle">CONFIRM YOUR WAGER</h2>
@@ -372,13 +361,12 @@
 </div>
 
 <script>
-  // ✅ Your Apps Script Web App /exec
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzxOVSjxpBDALIibr1bnqDJW7eYYIwlXGW2srhTyJ2KYedOuJkNO_jgDzPOWuDXxf4H3A/exec";
+  // ✅ UPDATE THIS to your WORKING deployment URL (you confirmed this one works)
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrRGMQ6mojHHuB-9z6yMPzLI-f6WQ1hdPt8Do76q4IORROVHtXiIBDSZ-u6QjQmvlthg/exec";
 
   const $ = (id) => document.getElementById(id);
   let session = { name:"", pin:"" };
 
-  // Countdown: 9:55 AM on 2/27/2026 (viewer local time)
   const LOCK_AT_LOCAL = new Date(2026, 1, 27, 9, 55, 0);
 
   let pendingSide = "";
@@ -389,6 +377,16 @@
   let undoTimer = null;
 
   function setPts(n){ $("points").value = n; }
+
+  // Small helper: safe number formatting + field fallback
+  const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+  const fmt = (v) => num(v).toFixed(2);
+  const pick = (obj, ...keys) => {
+    for (const k of keys) {
+      if (obj && obj[k] !== undefined && obj[k] !== null && obj[k] !== "") return obj[k];
+    }
+    return 0;
+  };
 
   function showBetting(){
     $("authCard").classList.add("hidden");
@@ -539,7 +537,6 @@
     $("betB").classList.toggle("secondary", side !== "B");
   }
 
-  // ---- Confirm modal ----
   function openConfirm(side){
     const pts = Number($("points").value);
     if(!Number.isFinite(pts) || pts <= 0){ alert("Enter points > 0."); return; }
@@ -562,7 +559,6 @@
     await placeBet(side);
   }
 
-  // ---- Undo bar ----
   function showUndo(betId, undoMinutes){
     const mins = Number(undoMinutes || 5);
     lastBetId = betId;
@@ -626,7 +622,6 @@
     checkResultsAuto();
   }
 
-  // ---- Betting ----
   async function placeBet(side){
     const pts = Number($("points").value);
     if(!Number.isFinite(pts) || pts <= 0){ alert("Enter points > 0."); return; }
@@ -652,6 +647,7 @@
       if(session.name && session.pin){
         const b = await apiGet(`${SCRIPT_URL}?action=balance&name=${encodeURIComponent(session.name)}&pin=${encodeURIComponent(session.pin)}&ts=${Date.now()}`);
         if(b.ok) renderBalance(b);
+
         await checkResultsAuto();
       }
     }catch(e){}
@@ -693,7 +689,6 @@
     $("betB").disabled = locked;
   }
 
-  // ---- Results ----
   function hideResults(){ $("resultsCard").classList.add("hidden"); }
 
   function showResults(r){
@@ -710,35 +705,37 @@
     $("resultsStatus").innerHTML = `<strong>Status:</strong> FINAL`;
     $("resultsHeadline").innerHTML = `<strong>WINNER: ${r.winner} • LOSER: ${r.loser}</strong>`;
 
-    const fmt = (x)=> (Number(x)||0).toFixed(2);
+    const payoutPerPoint = pick(r, "payoutPerPointPts", "payoutPerPoint");
+    const stakeDollars   = pick(r, "userWinnerStakeDollars", "userStakeDollars");
+
     const lines = [];
 
     lines.push(`
       <div class="resultLine">
-        <div class="pill"><strong>Loser pool:</strong> ${r.potPts} pts ($${fmt(r.potDollars)})</div>
-        <div class="pill"><strong>Winner pool:</strong> ${r.winPoolPts} pts</div>
+        <div class="pill"><strong>Loser pool:</strong> ${num(r.potPts)} pts ($${fmt(r.potDollars)})</div>
+        <div class="pill"><strong>Winner pool:</strong> ${num(r.winPoolPts)} pts</div>
       </div>
     `);
 
     lines.push(`
       <div class="resultLine">
-        <div class="pill"><strong>Payout / 1 winner pt:</strong> ${fmt(r.payoutPerPointPts)} pts</div>
+        <div class="pill"><strong>Payout / 1 winner pt:</strong> ${fmt(payoutPerPoint)} pts</div>
         <div class="pill"><strong>$ / point:</strong> $${fmt(r.dollarsPerPoint)}</div>
       </div>
     `);
 
     lines.push(`
       <div class="resultLine">
-        <div class="pill"><strong>Your winner pts:</strong> ${r.userWinnerPts}</div>
-        <div class="pill"><strong>Your loser pts:</strong> ${r.userLoserPts}</div>
+        <div class="pill"><strong>Your winner pts:</strong> ${num(r.userWinnerPts)}</div>
+        <div class="pill"><strong>Your loser pts:</strong> ${num(r.userLoserPts)}</div>
       </div>
     `);
 
-    if((r.userWinnerPts||0) > 0){
+    if(num(r.userWinnerPts) > 0){
       lines.push(`
         <div class="resultLine">
           <div class="pill"><strong>Your payout:</strong> ${fmt(r.userPayoutPts)} pts ($${fmt(r.userPayoutDollars)})</div>
-          <div class="pill"><strong>Your stake:</strong> $${fmt(r.userWinnerStakeDollars)}</div>
+          <div class="pill"><strong>Your stake:</strong> $${fmt(stakeDollars)}</div>
         </div>
       `);
       lines.push(`
@@ -747,7 +744,7 @@
           <div class="pill"><strong>Message:</strong> ${r.message || ""}</div>
         </div>
       `);
-    } else if((r.userLoserPts||0) > 0){
+    } else if(num(r.userLoserPts) > 0){
       lines.push(`
         <div class="resultLine">
           <div class="pill"><strong>You owe:</strong> $${fmt(r.oweDollars)}</div>
@@ -781,7 +778,6 @@
     }catch(e){}
   }
 
-  // ---- Admin ----
   function toggleAdmin(){
     const panel = $("adminPanel");
     if(!panel) return;
@@ -797,9 +793,7 @@
     const msg = $("adminMsg");
     if(msg) msg.innerHTML = `<strong>Status:</strong> Setting winner…`;
 
-    // MUST be POST
     const res = await apiPost({ action:"setwinner", winner, adminPin });
-
     if(!res.ok){
       if(msg) msg.innerHTML = `<strong>Status:</strong> ${res.error || "Failed"}`;
       alert(res.error || "Failed");
@@ -811,7 +805,6 @@
     await viewResults();
   }
 
-  // ---- Countdown ----
   function fmtCountdown(ms){
     if(ms <= 0) return "LOCK TIME";
     const totalSec = Math.floor(ms/1000);
@@ -836,7 +829,6 @@
     tickCountdown();
     setInterval(tickCountdown, 1000);
 
-    // preload market even if logged out
     try{
       const st = await apiGet(`${SCRIPT_URL}?action=state&ts=${Date.now()}`);
       if(st.ok) render(st);
