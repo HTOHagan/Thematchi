@@ -177,15 +177,16 @@
     .teamHead{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
     .teamLeft{ display:flex; align-items:center; gap:12px; min-width:0; }
 
-    .avatar{
-      width:64px; height:64px;
-      border-radius:16px;
-      border:1px solid var(--line);
-      background:rgba(11,107,58,.06);
-      overflow:hidden;
-      position:relative;
-      flex:0 0 auto;
-    }
+   .avatar{
+  width:128px;
+  height:128px;
+  border-radius:28px; /* was 16px */
+  border:1px solid var(--line);
+  background:rgba(11,107,58,.06);
+  overflow:hidden;
+  position:relative;
+  flex:0 0 auto;
+}
     .avatar img{ width:100%; height:100%; object-fit:cover; display:none; }
     .avatar span{
       position:absolute; inset:0;
