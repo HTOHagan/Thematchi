@@ -495,7 +495,8 @@
     let session = { name:"", pin:"" };
 
     // Countdown: 10 AM on 2/26/2026 (viewer local time)
-  const LOCK_AT_LOCAL = new Date(2026, 1, 11, 10, 0, 0);
+const LOCK_AT_LOCAL = new Date();
+LOCK_AT_LOCAL.setHours(10, 0, 0, 0); // 10:00 AM today
 
     let pendingSide = "";
     let teamsCache = { A:"Team A", B:"Team B" };
